@@ -128,7 +128,7 @@
     formKey.value++
   })
 
-  type AccountKey = 'super' | 'admin' | 'user'
+  type AccountKey = 'admin'
 
   export interface Account {
     key: AccountKey
@@ -140,25 +140,11 @@
 
   const accounts = computed<Account[]>(() => [
     {
-      key: 'super',
-      label: t('login.roles.super'),
-      userName: 'Super',
-      password: '123456',
-      roles: ['R_SUPER']
-    },
-    {
       key: 'admin',
       label: t('login.roles.admin'),
-      userName: 'Admin',
-      password: '123456',
-      roles: ['R_ADMIN']
-    },
-    {
-      key: 'user',
-      label: t('login.roles.user'),
-      userName: 'User',
-      password: '123456',
-      roles: ['R_USER']
+      userName: 'admin',
+      password: 'admin123',
+      roles: ['R_SUPER']
     }
   ])
 
@@ -188,7 +174,7 @@
   const loading = ref(false)
 
   onMounted(() => {
-    setupAccount('super')
+    setupAccount('admin')
   })
 
   // 设置账号
@@ -219,18 +205,20 @@
       // 登录请求
       const { username, password } = formData
 
-      const { token, refreshToken } = await fetchLogin({
-        userName: username,
+      const res = await fetchLogin({
+        username,
         password
       })
 
-      // 验证token
+      // 验证token（兼容新旧API响应格式）
+      const token = (res as any).access_token || (res as any).token
+      const rToken = (res as any).refresh_token || (res as any).refreshToken
       if (!token) {
         throw new Error('Login failed - no token received')
       }
 
       // 存储 token 和登录状态
-      userStore.setToken(token, refreshToken)
+      userStore.setToken(token, rToken)
       userStore.setLoginStatus(true)
 
       // 登录成功处理
