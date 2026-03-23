@@ -13,7 +13,12 @@
               @keyup.enter="handleSearch"
             />
             <ElButton type="primary" @click="handleSearch" v-ripple>搜索</ElButton>
-            <ElButton type="danger" :disabled="selectedIds.length === 0" @click="handleBatchDelete" v-ripple>
+            <ElButton
+              type="danger"
+              :disabled="selectedIds.length === 0"
+              @click="handleBatchDelete"
+              v-ripple
+            >
               批量删除
             </ElButton>
           </ElSpace>
@@ -36,7 +41,12 @@
             <ElInput v-model="formData.title" placeholder="请输入标题" />
           </ElFormItem>
           <ElFormItem label="内容" prop="content">
-            <ElInput v-model="formData.content" type="textarea" :rows="4" placeholder="请输入内容" />
+            <ElInput
+              v-model="formData.content"
+              type="textarea"
+              :rows="4"
+              placeholder="请输入内容"
+            />
           </ElFormItem>
           <ElFormItem label="类型" prop="type">
             <ElSelect v-model="formData.type" placeholder="请选择类型">
@@ -95,7 +105,7 @@
     1: { type: 'success', text: '图文' },
     2: { type: 'warning', text: '视频' }
   }
-  const DEFAULT_POST_TYPE = { type: 'info' as const, text: '未知' }
+  const UNKNOWN_POST_TYPE = { type: 'info' as const, text: '未知' }
 
   const {
     columns,
@@ -130,7 +140,7 @@
           label: '类型',
           width: 80,
           formatter: (row: Api.Admin.Post) => {
-            const config = POST_TYPE_CONFIG[row.type] || DEFAULT_POST_TYPE
+            const config = POST_TYPE_CONFIG[row.type] || UNKNOWN_POST_TYPE
             return h(ElTag, { type: config.type, size: 'small' }, () => config.text)
           }
         },
@@ -142,10 +152,8 @@
           label: '草稿',
           width: 80,
           formatter: (row: Api.Admin.Post) =>
-            h(
-              ElTag,
-              { type: row.is_draft ? 'warning' : 'success', size: 'small' },
-              () => (row.is_draft ? '草稿' : '已发布')
+            h(ElTag, { type: row.is_draft ? 'warning' : 'success', size: 'small' }, () =>
+              row.is_draft ? '草稿' : '已发布'
             )
         },
         { prop: 'created_at', label: '创建时间', width: 180, sortable: true },
@@ -209,11 +217,15 @@
   }
 
   const handleBatchDelete = () => {
-    ElMessageBox.confirm(`确定要删除选中的 ${selectedIds.value.length} 个帖子吗？`, '批量删除确认', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }).then(async () => {
+    ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedIds.value.length} 个帖子吗？`,
+      '批量删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(async () => {
       await fetchBatchDeletePosts(selectedIds.value)
       refreshRemove()
       selectedIds.value = []

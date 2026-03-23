@@ -375,7 +375,7 @@ async function fetchUserInfo(): Promise<void> {
     id: data.id,
     username: data.username,
     buttons: data.buttons || [],
-    roles: data.roles || ['R_SUPER'],
+    roles: data.roles || ['R_ADMIN'],
     userId: data.id || data.userId,
     userName: data.username || data.userName,
     email: data.email || '',

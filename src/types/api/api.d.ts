@@ -52,8 +52,11 @@ declare namespace Api {
     /** 登录响应 */
     interface LoginResponse {
       access_token: string
-      refresh_token: string
-      expires_in: number
+      refresh_token?: string
+      expires_in?: number
+      /** 兼容旧格式 */
+      token?: string
+      refreshToken?: string
     }
 
     /** 管理员信息 */

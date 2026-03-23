@@ -211,8 +211,8 @@
       })
 
       // 验证token（兼容新旧API响应格式）
-      const token = (res as any).access_token || (res as any).token
-      const rToken = (res as any).refresh_token || (res as any).refreshToken
+      const token = res.access_token || res.token
+      const rToken = res.refresh_token || res.refreshToken
       if (!token) {
         throw new Error('Login failed - no token received')
       }

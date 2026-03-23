@@ -13,7 +13,12 @@
               @keyup.enter="handleSearch"
             />
             <ElButton type="primary" @click="handleSearch" v-ripple>搜索</ElButton>
-            <ElButton type="danger" :disabled="selectedIds.length === 0" @click="handleBatchDelete" v-ripple>
+            <ElButton
+              type="danger"
+              :disabled="selectedIds.length === 0"
+              @click="handleBatchDelete"
+              v-ripple
+            >
               批量删除
             </ElButton>
           </ElSpace>
@@ -48,12 +53,15 @@
   const searchContent = ref('')
   const selectedIds = ref<number[]>([])
 
-  const AUDIT_STATUS_CONFIG: Record<string, { type: 'success' | 'warning' | 'danger' | 'info'; text: string }> = {
+  const AUDIT_STATUS_CONFIG: Record<
+    string,
+    { type: 'success' | 'warning' | 'danger' | 'info'; text: string }
+  > = {
     approved: { type: 'success', text: '已通过' },
     pending: { type: 'warning', text: '待审核' },
     rejected: { type: 'danger', text: '已拒绝' }
   }
-  const DEFAULT_AUDIT_STATUS = { type: 'info' as const, text: '未知' }
+  const UNKNOWN_AUDIT_STATUS = { type: 'info' as const, text: '未知' }
 
   const {
     columns,
@@ -88,7 +96,7 @@
           label: '审核状态',
           width: 100,
           formatter: (row: Api.Admin.Comment) => {
-            const config = AUDIT_STATUS_CONFIG[row.audit_status] || DEFAULT_AUDIT_STATUS
+            const config = AUDIT_STATUS_CONFIG[row.audit_status] || UNKNOWN_AUDIT_STATUS
             return h(ElTag, { type: config.type, size: 'small' }, () => config.text)
           }
         },
@@ -99,9 +107,7 @@
           width: 80,
           fixed: 'right',
           formatter: (row: Api.Admin.Comment) =>
-            h('div', [
-              h(ArtButtonTable, { type: 'delete', onClick: () => handleDelete(row.id) })
-            ])
+            h('div', [h(ArtButtonTable, { type: 'delete', onClick: () => handleDelete(row.id) })])
         }
       ]
     }
@@ -128,11 +134,15 @@
   }
 
   const handleBatchDelete = () => {
-    ElMessageBox.confirm(`确定要删除选中的 ${selectedIds.value.length} 条评论吗？`, '批量删除确认', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }).then(async () => {
+    ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedIds.value.length} 条评论吗？`,
+      '批量删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(async () => {
       await fetchBatchDeleteComments(selectedIds.value)
       refreshRemove()
       selectedIds.value = []
