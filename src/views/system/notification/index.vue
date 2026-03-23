@@ -4,7 +4,15 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="showDialog" v-ripple>发送通知</ElButton>
+            <ElButton @click="showDialog()" v-ripple>发送通知</ElButton>
+            <ElButton
+              type="danger"
+              :disabled="selectedIds.length === 0"
+              @click="handleBatchDelete"
+              v-ripple
+            >
+              批量删除
+            </ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -14,11 +22,17 @@
         :data="data"
         :columns="columns"
         :pagination="pagination"
+        @selection-change="handleSelectionChange"
         @pagination:size-change="handleSizeChange"
         @pagination:current-change="handleCurrentChange"
       />
 
-      <ElDialog v-model="dialogVisible" title="发送系统通知" width="500px" align-center>
+      <ElDialog
+        v-model="dialogVisible"
+        :title="dialogType === 'add' ? '发送系统通知' : '编辑通知'"
+        width="500px"
+        align-center
+      >
         <ElForm ref="formRef" :model="formData" :rules="formRules" label-width="80px">
           <ElFormItem label="标题" prop="title">
             <ElInput v-model="formData.title" placeholder="请输入通知标题" />
@@ -43,6 +57,36 @@
           <ElButton type="primary" @click="handleDialogSubmit">确定</ElButton>
         </template>
       </ElDialog>
+
+      <!-- 详情抽屉 -->
+      <ElDrawer v-model="detailVisible" title="通知详情" size="50%">
+        <template v-if="detailData">
+          <ElDescriptions :column="2" border>
+            <ElDescriptions-item label="ID">{{ detailData.id }}</ElDescriptions-item>
+            <ElDescriptions-item label="类型">
+              <ElTag size="small">{{
+                detailData.type === 'announcement' ? '公告' : '系统通知'
+              }}</ElTag>
+            </ElDescriptions-item>
+            <ElDescriptions-item label="标题" :span="2">{{ detailData.title }}</ElDescriptions-item>
+            <ElDescriptions-item label="内容" :span="2">{{
+              detailData.content
+            }}</ElDescriptions-item>
+            <ElDescriptions-item label="状态">
+              <ElTag :type="detailData.status === 'sent' ? 'success' : 'warning'" size="small">
+                {{ detailData.status === 'sent' ? '已发送' : '待发送' }}
+              </ElTag>
+            </ElDescriptions-item>
+            <ElDescriptions-item label="目标类型">{{
+              detailData.target_type || '-'
+            }}</ElDescriptions-item>
+            <ElDescriptions-item label="发送时间">{{
+              detailData.sent_at || '-'
+            }}</ElDescriptions-item>
+            <ElDescriptions-item label="创建时间">{{ detailData.created_at }}</ElDescriptions-item>
+          </ElDescriptions>
+        </template>
+      </ElDrawer>
     </ElCard>
   </div>
 </template>
@@ -52,9 +96,12 @@
   import { useTable } from '@/hooks/core/useTable'
   import {
     fetchGetSystemNotificationList,
+    fetchGetSystemNotification,
     fetchCreateSystemNotification,
+    fetchUpdateSystemNotification,
     fetchDeleteSystemNotification,
-    fetchResendSystemNotification
+    fetchResendSystemNotification,
+    fetchBatchDeleteSystemNotifications
   } from '@/api/system-manage'
   import { ElTag, ElMessageBox, ElButton as ElBtn } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
@@ -62,7 +109,13 @@
   defineOptions({ name: 'NotificationManage' })
 
   const dialogVisible = ref(false)
+  const dialogType = ref<'add' | 'edit'>('add')
+  const currentEditId = ref<number>(0)
+  const selectedIds = ref<number[]>([])
   const formRef = ref<FormInstance>()
+
+  const detailVisible = ref(false)
+  const detailData = ref<Api.Admin.SystemNotification | null>(null)
 
   const formData = reactive({
     title: '',
@@ -85,12 +138,14 @@
     handleCurrentChange,
     refreshData,
     refreshCreate,
+    refreshUpdate,
     refreshRemove
   } = useTable({
     core: {
       apiFn: fetchGetSystemNotificationList,
       apiParams: { page: 1, limit: 20 },
       columnsFactory: () => [
+        { type: 'selection' },
         { type: 'index', width: 60, label: '序号' },
         { prop: 'title', label: '标题', minWidth: 200, showOverflowTooltip: true },
         { prop: 'content', label: '内容', minWidth: 250, showOverflowTooltip: true },
@@ -114,10 +169,12 @@
         {
           prop: 'operation',
           label: '操作',
-          width: 140,
+          width: 200,
           fixed: 'right',
           formatter: (row: Api.Admin.SystemNotification) =>
             h('div', { class: 'flex gap-1' }, [
+              h(ArtButtonTable, { type: 'view', onClick: () => showDetail(row.id) }),
+              h(ArtButtonTable, { type: 'edit', onClick: () => showDialog(row) }),
               h(ElBtn, { size: 'small', onClick: () => handleResend(row.id) }, () => '重发'),
               h(ArtButtonTable, { type: 'delete', onClick: () => handleDelete(row.id) })
             ])
@@ -126,8 +183,34 @@
     }
   })
 
-  const showDialog = () => {
-    Object.assign(formData, { title: '', content: '', type: 'system' })
+  const handleSelectionChange = (selection: Api.Admin.SystemNotification[]) => {
+    selectedIds.value = selection.map((item) => item.id)
+  }
+
+  const showDetail = async (id: number) => {
+    try {
+      const res = await fetchGetSystemNotification(id)
+      detailData.value = res
+      detailVisible.value = true
+    } catch {
+      // ignore
+    }
+  }
+
+  const showDialog = (row?: Api.Admin.SystemNotification) => {
+    if (row) {
+      dialogType.value = 'edit'
+      currentEditId.value = row.id
+      Object.assign(formData, {
+        title: row.title,
+        content: row.content,
+        type: row.type || 'system'
+      })
+    } else {
+      dialogType.value = 'add'
+      currentEditId.value = 0
+      Object.assign(formData, { title: '', content: '', type: 'system' })
+    }
     nextTick(() => {
       formRef.value?.clearValidate()
       dialogVisible.value = true
@@ -138,9 +221,15 @@
     if (!formRef.value) return
     await formRef.value.validate(async (valid) => {
       if (!valid) return
-      await fetchCreateSystemNotification(formData)
-      dialogVisible.value = false
-      refreshCreate()
+      if (dialogType.value === 'add') {
+        await fetchCreateSystemNotification(formData)
+        dialogVisible.value = false
+        refreshCreate()
+      } else {
+        await fetchUpdateSystemNotification(currentEditId.value, formData)
+        dialogVisible.value = false
+        refreshUpdate()
+      }
     })
   }
 
@@ -162,6 +251,22 @@
     }).then(async () => {
       await fetchDeleteSystemNotification(id)
       refreshRemove()
+    })
+  }
+
+  const handleBatchDelete = () => {
+    ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedIds.value.length} 条通知吗？`,
+      '批量删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(async () => {
+      await fetchBatchDeleteSystemNotifications(selectedIds.value)
+      refreshRemove()
+      selectedIds.value = []
     })
   }
 </script>

@@ -9,9 +9,10 @@
         </ElSpace>
       </div>
 
-      <div v-loading="filesLoading">
+      <div v-loading="filesLoading" class="flex-1 overflow-auto">
         <h4 class="text-base font-medium mb-3 px-2">图片文件 ({{ images.length }})</h4>
-        <ElTable :data="images" stripe max-height="400">
+        <ElTable :data="images" stripe style="width: 100%">
+          <ElTableColumn type="selection" width="55" />
           <ElTableColumn type="index" width="60" label="序号" />
           <ElTableColumn prop="name" label="文件名" min-width="300" show-overflow-tooltip />
           <ElTableColumn prop="size" label="大小" width="120">
@@ -32,6 +33,13 @@
               />
             </template>
           </ElTableColumn>
+          <ElTableColumn label="操作" width="80" fixed="right">
+            <template #default="{ row }">
+              <ElButton type="danger" size="small" link @click="handleDeleteFile(row.name)">
+                删除
+              </ElButton>
+            </template>
+          </ElTableColumn>
         </ElTable>
       </div>
 
@@ -47,7 +55,9 @@
         <template #footer>
           <ElButton @click="createDialogVisible = false">取消</ElButton>
           <ElButton @click="handleSyncCreate" :loading="creating">同步创建</ElButton>
-          <ElButton type="primary" @click="handleAsyncCreate" :loading="creating">异步创建</ElButton>
+          <ElButton type="primary" @click="handleAsyncCreate" :loading="creating"
+            >异步创建</ElButton
+          >
         </template>
       </ElDialog>
     </ElCard>
@@ -57,9 +67,11 @@
 <script setup lang="ts">
   import {
     fetchGetBatchUploadFiles,
+    fetchDeleteBatchUploadFiles,
     fetchBatchCreateNotes,
     fetchAsyncBatchCreateNotes
   } from '@/api/system-manage'
+  import { ElMessageBox } from 'element-plus'
 
   defineOptions({ name: 'BatchUploadManage' })
 
@@ -96,6 +108,17 @@
     } finally {
       filesLoading.value = false
     }
+  }
+
+  const handleDeleteFile = (fileName: string) => {
+    ElMessageBox.confirm(`确定要删除文件 "${fileName}" 吗？`, '删除确认', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }).then(async () => {
+      await fetchDeleteBatchUploadFiles([fileName])
+      loadFiles()
+    })
   }
 
   const showCreateDialog = () => {

@@ -32,6 +32,14 @@
             <ElButton type="primary" @click="handleSearch" v-ripple>搜索</ElButton>
             <ElButton @click="showBatchDialog" v-ripple>批量生成</ElButton>
             <ElButton @click="showCreateDialog" v-ripple>单个生成</ElButton>
+            <ElButton
+              type="danger"
+              :disabled="selectedIds.length === 0"
+              @click="handleBatchDelete"
+              v-ripple
+            >
+              批量删除
+            </ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -41,6 +49,7 @@
         :data="data"
         :columns="columns"
         :pagination="pagination"
+        @selection-change="handleSelectionChange"
         @pagination:size-change="handleSizeChange"
         @pagination:current-change="handleCurrentChange"
       />
@@ -66,12 +75,38 @@
       <ElDialog v-model="createDialogVisible" title="生成许可证" width="400px" align-center>
         <ElForm ref="createFormRef" :model="createFormData" label-width="80px">
           <ElFormItem label="备注">
-            <ElInput v-model="createFormData.remark" type="textarea" :rows="3" placeholder="可选备注" />
+            <ElInput
+              v-model="createFormData.remark"
+              type="textarea"
+              :rows="3"
+              placeholder="可选备注"
+            />
           </ElFormItem>
         </ElForm>
         <template #footer>
           <ElButton @click="createDialogVisible = false">取消</ElButton>
           <ElButton type="primary" @click="handleCreateSubmit">确定</ElButton>
+        </template>
+      </ElDialog>
+
+      <!-- 编辑许可证 -->
+      <ElDialog v-model="editDialogVisible" title="编辑许可证" width="400px" align-center>
+        <ElForm ref="editFormRef" :model="editFormData" label-width="80px">
+          <ElFormItem label="状态">
+            <ElSwitch v-model="editFormData.is_active" active-text="激活" inactive-text="未激活" />
+          </ElFormItem>
+          <ElFormItem label="备注">
+            <ElInput
+              v-model="editFormData.remark"
+              type="textarea"
+              :rows="3"
+              placeholder="可选备注"
+            />
+          </ElFormItem>
+        </ElForm>
+        <template #footer>
+          <ElButton @click="editDialogVisible = false">取消</ElButton>
+          <ElButton type="primary" @click="handleEditSubmit">确定</ElButton>
         </template>
       </ElDialog>
 
@@ -85,11 +120,24 @@
                 {{ detailData.is_active ? '激活' : '未激活' }}
               </ElTag>
             </ElDescriptions-item>
-            <ElDescriptions-item label="许可证" :span="2">{{ detailData.license_key }}</ElDescriptions-item>
-            <ElDescriptions-item label="机器型号">{{ detailData.machine_model || '-' }}</ElDescriptions-item>
-            <ElDescriptions-item label="机器ID">{{ detailData.machine_id || '-' }}</ElDescriptions-item>
-            <ElDescriptions-item label="备注" :span="2">{{ detailData.remark || '-' }}</ElDescriptions-item>
-            <ElDescriptions-item label="最后验证时间">{{ detailData.last_verified_at || '-' }}</ElDescriptions-item>
+            <ElDescriptions-item label="许可证" :span="2">{{
+              detailData.license_key
+            }}</ElDescriptions-item>
+            <ElDescriptions-item label="机器型号">{{
+              detailData.machine_model || '-'
+            }}</ElDescriptions-item>
+            <ElDescriptions-item label="机器ID">{{
+              detailData.machine_id || '-'
+            }}</ElDescriptions-item>
+            <ElDescriptions-item label="备注" :span="2">{{
+              detailData.remark || '-'
+            }}</ElDescriptions-item>
+            <ElDescriptions-item label="过期时间">{{
+              detailData.expires_at || '-'
+            }}</ElDescriptions-item>
+            <ElDescriptions-item label="最后验证时间">{{
+              detailData.last_verified_at || '-'
+            }}</ElDescriptions-item>
             <ElDescriptions-item label="创建时间">{{ detailData.created_at }}</ElDescriptions-item>
           </ElDescriptions>
         </template>
@@ -106,14 +154,17 @@
     fetchGetLicenseStats,
     fetchDeleteLicense,
     fetchBatchCreateLicenses,
-    fetchCreateLicense
+    fetchCreateLicense,
+    fetchUpdateLicense,
+    fetchBatchDeleteLicenses
   } from '@/api/system-manage'
-  import { ElTag, ElMessageBox, ElButton as ElBtn } from 'element-plus'
+  import { ElTag, ElMessageBox } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
 
   defineOptions({ name: 'LicenseManage' })
 
   const searchKey = ref('')
+  const selectedIds = ref<number[]>([])
   const stats = reactive({ total: 0, distributed: 0, available: 0 })
   const batchDialogVisible = ref(false)
   const batchFormRef = ref<FormInstance>()
@@ -128,6 +179,11 @@
   const createDialogVisible = ref(false)
   const createFormRef = ref<FormInstance>()
   const createFormData = reactive({ remark: '' })
+
+  const editDialogVisible = ref(false)
+  const editFormRef = ref<FormInstance>()
+  const currentEditId = ref<number>(0)
+  const editFormData = reactive({ is_active: true, remark: '' })
 
   const loadStats = async () => {
     try {
@@ -149,12 +205,14 @@
     handleSizeChange,
     handleCurrentChange,
     refreshData,
+    refreshUpdate,
     refreshRemove
   } = useTable({
     core: {
       apiFn: fetchGetLicenseList,
       apiParams: { page: 1, limit: 20 },
       columnsFactory: () => [
+        { type: 'selection' },
         { type: 'index', width: 60, label: '序号' },
         { prop: 'license_key', label: '许可证', minWidth: 280, showOverflowTooltip: true },
         { prop: 'machine_model', label: '机器型号', width: 120 },
@@ -172,17 +230,22 @@
         {
           prop: 'operation',
           label: '操作',
-          width: 150,
+          width: 180,
           fixed: 'right',
           formatter: (row: Api.Admin.License) =>
             h('div', { class: 'flex gap-1' }, [
-              h(ElBtn, { size: 'small', onClick: () => showDetail(row) }, () => '查看'),
+              h(ArtButtonTable, { type: 'view', onClick: () => showDetail(row) }),
+              h(ArtButtonTable, { type: 'edit', onClick: () => showEditDialog(row) }),
               h(ArtButtonTable, { type: 'delete', onClick: () => handleDelete(row.id) })
             ])
         }
       ]
     }
   })
+
+  const handleSelectionChange = (selection: Api.Admin.License[]) => {
+    selectedIds.value = selection.map((item) => item.id)
+  }
 
   onMounted(() => {
     loadStats()
@@ -218,6 +281,25 @@
     loadStats()
   }
 
+  const showEditDialog = (row: Api.Admin.License) => {
+    currentEditId.value = row.id
+    Object.assign(editFormData, {
+      is_active: row.is_active,
+      remark: row.remark || ''
+    })
+    nextTick(() => {
+      editFormRef.value?.clearValidate()
+      editDialogVisible.value = true
+    })
+  }
+
+  const handleEditSubmit = async () => {
+    await fetchUpdateLicense(currentEditId.value, editFormData)
+    editDialogVisible.value = false
+    refreshUpdate()
+    loadStats()
+  }
+
   const showBatchDialog = () => {
     batchFormData.count = 10
     nextTick(() => {
@@ -245,6 +327,23 @@
     }).then(async () => {
       await fetchDeleteLicense(id)
       refreshRemove()
+      loadStats()
+    })
+  }
+
+  const handleBatchDelete = () => {
+    ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedIds.value.length} 个许可证吗？`,
+      '批量删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(async () => {
+      await fetchBatchDeleteLicenses(selectedIds.value)
+      refreshRemove()
+      selectedIds.value = []
       loadStats()
     })
   }

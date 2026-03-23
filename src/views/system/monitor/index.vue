@@ -6,30 +6,36 @@
         <ElButton @click="loadActivities" :loading="actLoading" v-ripple>刷新</ElButton>
       </div>
 
-      <ElTimeline>
-        <ElTimelineItem
-          v-for="item in activities"
-          :key="item.id"
-          :timestamp="item.created_at"
-          placement="top"
-        >
-          <ElCard shadow="hover" class="mb-2">
-            <div class="flex items-center gap-3">
-              <ElAvatar :src="item.avatar" :size="40" />
-              <div>
-                <div class="font-medium">
-                  {{ item.nickname }}
-                  <span class="text-gray-400 text-xs">({{ item.user_id }})</span>
+      <div class="flex-1 overflow-auto px-2">
+        <ElTimeline>
+          <ElTimelineItem
+            v-for="item in activities"
+            :key="item.id"
+            :timestamp="item.created_at"
+            placement="top"
+          >
+            <ElCard shadow="hover" class="mb-2">
+              <div class="flex items-center gap-3">
+                <ElAvatar :src="item.avatar" :size="40" />
+                <div class="flex-1 min-w-0">
+                  <div class="font-medium">
+                    {{ item.nickname }}
+                    <span class="text-gray-400 text-xs">({{ item.user_id }})</span>
+                  </div>
+                  <div class="text-sm text-gray-500 mt-1 truncate">{{ item.content }}</div>
                 </div>
-                <div class="text-sm text-gray-500 mt-1">{{ item.content }}</div>
+                <ElTag
+                  class="ml-auto flex-shrink-0"
+                  size="small"
+                  :type="getActivityType(item.type)"
+                >
+                  {{ getActivityLabel(item.type) }}
+                </ElTag>
               </div>
-              <ElTag class="ml-auto" size="small" :type="getActivityType(item.type)">
-                {{ getActivityLabel(item.type) }}
-              </ElTag>
-            </div>
-          </ElCard>
-        </ElTimelineItem>
-      </ElTimeline>
+            </ElCard>
+          </ElTimelineItem>
+        </ElTimeline>
+      </div>
 
       <ElEmpty v-if="!actLoading && activities.length === 0" description="暂无动态" />
     </ElCard>
