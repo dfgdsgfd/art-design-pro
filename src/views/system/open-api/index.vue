@@ -4,6 +4,15 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
+            <ElInput
+              v-model="searchName"
+              placeholder="搜索API名称"
+              clearable
+              style="width: 200px"
+              @clear="handleSearch"
+              @keyup.enter="handleSearch"
+            />
+            <ElButton type="primary" @click="handleSearch" v-ripple>搜索</ElButton>
             <ElButton @click="showDialog('add')" v-ripple>创建API密钥</ElButton>
             <ElButton
               type="danger"
@@ -60,14 +69,10 @@
             <ElDescriptionsItem label="ID">{{ detailData.id }}</ElDescriptionsItem>
             <ElDescriptionsItem label="名称">{{ detailData.name }}</ElDescriptionsItem>
             <ElDescriptionsItem label="API Key">
-              <code class="text-sm bg-gray-100 px-2 py-1 rounded">{{
-                detailData.api_key
-              }}</code>
+              <code class="text-sm bg-gray-100 px-2 py-1 rounded">{{ detailData.api_key }}</code>
             </ElDescriptionsItem>
             <ElDescriptionsItem label="API Secret">
-              <code class="text-sm bg-gray-100 px-2 py-1 rounded">{{
-                detailData.api_secret
-              }}</code>
+              <code class="text-sm bg-gray-100 px-2 py-1 rounded">{{ detailData.api_secret }}</code>
             </ElDescriptionsItem>
             <ElDescriptionsItem label="权限">{{ detailData.permissions }}</ElDescriptionsItem>
             <ElDescriptionsItem label="速率限制"
@@ -81,9 +86,7 @@
             <ElDescriptionsItem label="过期时间">{{
               detailData.expires_at || '永不过期'
             }}</ElDescriptionsItem>
-            <ElDescriptionsItem label="创建时间">{{
-              detailData.created_at
-            }}</ElDescriptionsItem>
+            <ElDescriptionsItem label="创建时间">{{ detailData.created_at }}</ElDescriptionsItem>
           </ElDescriptions>
         </template>
       </ElDrawer>
@@ -108,6 +111,7 @@
   defineOptions({ name: 'OpenApiManage' })
 
   const selectedIds = ref<number[]>([])
+  const searchName = ref('')
   const dialogVisible = ref(false)
   const dialogType = ref<'add' | 'edit'>('add')
   const currentEditId = ref<number>(0)
@@ -133,6 +137,8 @@
     data,
     loading,
     pagination,
+    getData,
+    replaceSearchParams,
     handleSizeChange,
     handleCurrentChange,
     refreshData,
@@ -177,6 +183,11 @@
 
   const handleSelectionChange = (selection: Api.Admin.OpenApi[]) => {
     selectedIds.value = selection.map((item) => item.id)
+  }
+
+  const handleSearch = () => {
+    replaceSearchParams({ name: searchName.value || undefined })
+    getData()
   }
 
   const showDetail = async (id: number) => {

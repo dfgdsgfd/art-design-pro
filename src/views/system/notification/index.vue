@@ -4,6 +4,15 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
+            <ElInput
+              v-model="searchTitle"
+              placeholder="搜索通知标题"
+              clearable
+              style="width: 200px"
+              @clear="handleSearch"
+              @keyup.enter="handleSearch"
+            />
+            <ElButton type="primary" @click="handleSearch" v-ripple>搜索</ElButton>
             <ElButton @click="showDialog()" v-ripple>发送通知</ElButton>
             <ElButton
               type="danger"
@@ -112,6 +121,7 @@
   const dialogType = ref<'add' | 'edit'>('add')
   const currentEditId = ref<number>(0)
   const selectedIds = ref<number[]>([])
+  const searchTitle = ref('')
   const formRef = ref<FormInstance>()
 
   const detailVisible = ref(false)
@@ -134,6 +144,8 @@
     data,
     loading,
     pagination,
+    getData,
+    replaceSearchParams,
     handleSizeChange,
     handleCurrentChange,
     refreshData,
@@ -185,6 +197,11 @@
 
   const handleSelectionChange = (selection: Api.Admin.SystemNotification[]) => {
     selectedIds.value = selection.map((item) => item.id)
+  }
+
+  const handleSearch = () => {
+    replaceSearchParams({ title: searchTitle.value || undefined })
+    getData()
   }
 
   const showDetail = async (id: number) => {

@@ -14,7 +14,12 @@
             />
             <ElButton type="primary" @click="handleSearch" v-ripple>搜索</ElButton>
             <ElButton @click="showDialog('add')" v-ripple>新增用户</ElButton>
-            <ElButton type="danger" :disabled="selectedIds.length === 0" @click="handleBatchDelete" v-ripple>
+            <ElButton
+              type="danger"
+              :disabled="selectedIds.length === 0"
+              @click="handleBatchDelete"
+              v-ripple
+            >
               批量删除
             </ElButton>
           </ElSpace>
@@ -72,6 +77,58 @@
           <ElButton type="primary" @click="handleDialogSubmit">确定</ElButton>
         </template>
       </ElDialog>
+
+      <!-- 用户详情抽屉 -->
+      <ElDrawer v-model="detailVisible" title="用户详情" size="50%">
+        <template v-if="detailData">
+          <ElDescriptions :column="2" border>
+            <ElDescriptionsItem label="ID">{{ detailData.id }}</ElDescriptionsItem>
+            <ElDescriptionsItem label="用户ID">{{ detailData.user_id }}</ElDescriptionsItem>
+            <ElDescriptionsItem label="昵称">{{ detailData.nickname }}</ElDescriptionsItem>
+            <ElDescriptionsItem label="性别">{{ detailData.gender || '-' }}</ElDescriptionsItem>
+            <ElDescriptionsItem label="头像">
+              <ElImage
+                v-if="detailData.avatar"
+                :src="detailData.avatar"
+                :preview-src-list="[detailData.avatar]"
+                preview-teleported
+                fit="cover"
+                style="width: 80px; height: 80px"
+                class="rounded"
+              />
+              <span v-else>-</span>
+            </ElDescriptionsItem>
+            <ElDescriptionsItem label="状态">
+              <ElTag
+                :type="String(detailData.is_active) === 'true' ? 'success' : 'danger'"
+                size="small"
+              >
+                {{ String(detailData.is_active) === 'true' ? '启用' : '禁用' }}
+              </ElTag>
+            </ElDescriptionsItem>
+            <ElDescriptionsItem label="简介" :span="2">{{
+              detailData.bio || '-'
+            }}</ElDescriptionsItem>
+            <ElDescriptionsItem label="地区">{{ detailData.location || '-' }}</ElDescriptionsItem>
+            <ElDescriptionsItem label="认证">
+              <ElTag :type="detailData.verified === 1 ? 'success' : 'info'" size="small">
+                {{ detailData.verified === 1 ? '已认证' : '未认证' }}
+              </ElTag>
+            </ElDescriptionsItem>
+            <ElDescriptionsItem label="星座">{{
+              detailData.zodiac_sign || '-'
+            }}</ElDescriptionsItem>
+            <ElDescriptionsItem label="MBTI">{{ detailData.mbti || '-' }}</ElDescriptionsItem>
+            <ElDescriptionsItem label="学历">{{ detailData.education || '-' }}</ElDescriptionsItem>
+            <ElDescriptionsItem label="专业">{{ detailData.major || '-' }}</ElDescriptionsItem>
+            <ElDescriptionsItem label="兴趣" :span="2">{{
+              detailData.interests || '-'
+            }}</ElDescriptionsItem>
+            <ElDescriptionsItem label="创建时间">{{ detailData.created_at }}</ElDescriptionsItem>
+            <ElDescriptionsItem label="更新时间">{{ detailData.updated_at }}</ElDescriptionsItem>
+          </ElDescriptions>
+        </template>
+      </ElDrawer>
     </ElCard>
   </div>
 </template>
@@ -81,6 +138,7 @@
   import { useTable } from '@/hooks/core/useTable'
   import {
     fetchGetUserList,
+    fetchGetUser,
     fetchCreateUser,
     fetchUpdateUser,
     fetchDeleteUser,
@@ -97,6 +155,9 @@
   const dialogType = ref<'add' | 'edit'>('add')
   const currentEditId = ref<number>(0)
   const formRef = ref<FormInstance>()
+
+  const detailVisible = ref(false)
+  const detailData = ref<Api.Admin.User | null>(null)
 
   const formData = reactive({
     user_id: '',
@@ -168,20 +229,19 @@
           label: '认证',
           width: 80,
           formatter: (row: Api.Admin.User) =>
-            h(
-              ElTag,
-              { type: row.verified === 1 ? 'success' : 'info', size: 'small' },
-              () => (row.verified === 1 ? '已认证' : '未认证')
+            h(ElTag, { type: row.verified === 1 ? 'success' : 'info', size: 'small' }, () =>
+              row.verified === 1 ? '已认证' : '未认证'
             )
         },
         { prop: 'created_at', label: '创建时间', width: 180, sortable: true },
         {
           prop: 'operation',
           label: '操作',
-          width: 120,
+          width: 160,
           fixed: 'right',
           formatter: (row: Api.Admin.User) =>
             h('div', [
+              h(ArtButtonTable, { type: 'view', onClick: () => showDetail(row.id) }),
               h(ArtButtonTable, { type: 'edit', onClick: () => showDialog('edit', row) }),
               h(ArtButtonTable, { type: 'delete', onClick: () => handleDelete(row.id) })
             ])
@@ -197,6 +257,16 @@
 
   const handleSelectionChange = (selection: Api.Admin.User[]) => {
     selectedIds.value = selection.map((item) => item.id)
+  }
+
+  const showDetail = async (id: number) => {
+    try {
+      const res = await fetchGetUser(id)
+      detailData.value = res
+      detailVisible.value = true
+    } catch {
+      // ignore
+    }
   }
 
   const showDialog = (type: 'add' | 'edit', row?: Api.Admin.User) => {
@@ -244,11 +314,15 @@
   }
 
   const handleBatchDelete = () => {
-    ElMessageBox.confirm(`确定要删除选中的 ${selectedIds.value.length} 个用户吗？`, '批量删除确认', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }).then(async () => {
+    ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedIds.value.length} 个用户吗？`,
+      '批量删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(async () => {
       await fetchBatchDeleteUsers(selectedIds.value)
       refreshRemove()
       selectedIds.value = []

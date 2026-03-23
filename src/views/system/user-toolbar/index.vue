@@ -4,6 +4,15 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
+            <ElInput
+              v-model="searchName"
+              placeholder="搜索名称"
+              clearable
+              style="width: 200px"
+              @clear="handleSearch"
+              @keyup.enter="handleSearch"
+            />
+            <ElButton type="primary" @click="handleSearch" v-ripple>搜索</ElButton>
             <ElButton @click="showDialog('add')" v-ripple>创建工具栏项</ElButton>
             <ElButton
               type="danger"
@@ -76,6 +85,7 @@
   defineOptions({ name: 'UserToolbarManage' })
 
   const selectedIds = ref<number[]>([])
+  const searchName = ref('')
   const dialogVisible = ref(false)
   const dialogType = ref<'add' | 'edit'>('add')
   const currentEditId = ref<number>(0)
@@ -99,6 +109,8 @@
     data,
     loading,
     pagination,
+    getData,
+    replaceSearchParams,
     handleSizeChange,
     handleCurrentChange,
     refreshData,
@@ -147,6 +159,11 @@
 
   const handleSelectionChange = (selection: Api.Admin.UserToolbar[]) => {
     selectedIds.value = selection.map((item) => item.id)
+  }
+
+  const handleSearch = () => {
+    replaceSearchParams({ name: searchName.value || undefined })
+    getData()
   }
 
   const handleToggle = async (id: number) => {

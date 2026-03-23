@@ -4,7 +4,24 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
+            <ElInput
+              v-model="searchVersion"
+              placeholder="搜索版本号"
+              clearable
+              style="width: 200px"
+              @clear="handleSearch"
+              @keyup.enter="handleSearch"
+            />
+            <ElButton type="primary" @click="handleSearch" v-ripple>搜索</ElButton>
             <ElButton @click="showDialog('add')" v-ripple>新增版本</ElButton>
+            <ElButton
+              type="danger"
+              :disabled="selectedIds.length === 0"
+              @click="handleBatchDelete"
+              v-ripple
+            >
+              批量删除
+            </ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -14,6 +31,7 @@
         :data="data"
         :columns="columns"
         :pagination="pagination"
+        @selection-change="handleSelectionChange"
         @pagination:size-change="handleSizeChange"
         @pagination:current-change="handleCurrentChange"
       />
@@ -71,13 +89,16 @@
     fetchGetAppVersionList,
     fetchCreateAppVersion,
     fetchUpdateAppVersion,
-    fetchDeleteAppVersion
+    fetchDeleteAppVersion,
+    fetchBatchDeleteAppVersions
   } from '@/api/system-manage'
   import { ElTag, ElMessageBox } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
 
   defineOptions({ name: 'AppVersionManage' })
 
+  const searchVersion = ref('')
+  const selectedIds = ref<number[]>([])
   const dialogVisible = ref(false)
   const dialogType = ref<'add' | 'edit'>('add')
   const currentEditId = ref<number>(0)
@@ -104,6 +125,8 @@
     data,
     loading,
     pagination,
+    getData,
+    replaceSearchParams,
     handleSizeChange,
     handleCurrentChange,
     refreshData,
@@ -115,6 +138,7 @@
       apiFn: fetchGetAppVersionList,
       apiParams: { page: 1, limit: 20 },
       columnsFactory: () => [
+        { type: 'selection' },
         { type: 'index', width: 60, label: '序号' },
         { prop: 'version', label: '版本号', width: 120 },
         { prop: 'build_number', label: '构建号', width: 100 },
@@ -153,6 +177,15 @@
       ]
     }
   })
+
+  const handleSearch = () => {
+    replaceSearchParams({ version: searchVersion.value || undefined })
+    getData()
+  }
+
+  const handleSelectionChange = (selection: Api.Admin.AppVersion[]) => {
+    selectedIds.value = selection.map((item) => item.id)
+  }
 
   const showDialog = (type: 'add' | 'edit', row?: Api.Admin.AppVersion) => {
     dialogType.value = type
@@ -195,6 +228,22 @@
     }).then(async () => {
       await fetchDeleteAppVersion(id)
       refreshRemove()
+    })
+  }
+
+  const handleBatchDelete = () => {
+    ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedIds.value.length} 个版本吗？`,
+      '批量删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(async () => {
+      await fetchBatchDeleteAppVersions(selectedIds.value)
+      refreshRemove()
+      selectedIds.value = []
     })
   }
 </script>
