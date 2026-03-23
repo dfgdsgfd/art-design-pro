@@ -277,6 +277,270 @@ declare namespace Api {
       category: string
       description: string
     }
+
+    // ==================== 点赞管理 ====================
+
+    /** 点赞记录 */
+    interface Like {
+      id: number
+      user_id: number
+      post_id: number
+      created_at: string
+    }
+
+    /** 点赞搜索参数 */
+    interface LikeSearchParams extends Api.Common.CommonSearchParams {
+      user_id?: string
+      post_id?: string
+    }
+
+    // ==================== 关注管理 ====================
+
+    /** 关注记录 */
+    interface Follow {
+      id: number
+      follower_id: number
+      following_id: number
+      created_at: string
+    }
+
+    /** 关注搜索参数 */
+    interface FollowSearchParams extends Api.Common.CommonSearchParams {
+      follower_id?: string
+      following_id?: string
+    }
+
+    // ==================== 收藏管理 ====================
+
+    /** 收藏记录 */
+    interface Collection {
+      id: number
+      user_id: number
+      post_id: number
+      created_at: string
+    }
+
+    /** 收藏搜索参数 */
+    interface CollectionSearchParams extends Api.Common.CommonSearchParams {
+      user_id?: string
+      post_id?: string
+    }
+
+    // ==================== 会话管理 ====================
+
+    /** 会话记录 */
+    interface Session {
+      id: number
+      user_id: number
+      refresh_token: string
+      user_agent: string
+      is_active: boolean
+      expires_at: string
+      created_at: string
+    }
+
+    /** 会话搜索参数 */
+    interface SessionSearchParams extends Api.Common.CommonSearchParams {
+      user_id?: string
+      is_active?: string
+    }
+
+    // ==================== 认证审核管理 ====================
+
+    /** 认证审核记录 */
+    interface AuditRecord {
+      id: number
+      user_id: number
+      user_display_id: string
+      nickname: string
+      avatar: string
+      type: number
+      content: string
+      status: number
+      reason: string | null
+      created_at: string
+      audit_time: string | null
+    }
+
+    /** 审核搜索参数 */
+    interface AuditSearchParams extends Api.Common.CommonSearchParams {
+      status?: string
+      user_display_id?: string
+    }
+
+    // ==================== 许可证管理 ====================
+
+    /** 许可证 */
+    interface License {
+      id: number
+      license_key: string
+      machine_model: string
+      machine_id: string
+      remark: string | null
+      is_active: boolean
+      expires_at: string | null
+      last_verified_at: string | null
+      created_at: string
+    }
+
+    /** 许可证搜索参数 */
+    interface LicenseSearchParams extends Api.Common.CommonSearchParams {
+      license_key?: string
+      is_active?: string
+    }
+
+    /** 许可证统计 */
+    interface LicenseStats {
+      total: number
+      distributed: number
+      available: number
+    }
+
+    // ==================== 应用版本管理 ====================
+
+    /** 应用版本 */
+    interface AppVersion {
+      id: number
+      version: string
+      build_number: number
+      platform: string
+      release_notes: string
+      download_url: string
+      is_force_update: boolean
+      is_active: boolean
+      created_at: string
+      updated_at: string
+    }
+
+    /** 应用版本搜索参数 */
+    interface AppVersionSearchParams extends Api.Common.CommonSearchParams {
+      platform?: string
+      is_active?: string
+    }
+
+    /** 应用版本创建/更新参数 */
+    interface AppVersionFormParams {
+      version?: string
+      build_number?: number
+      platform?: string
+      release_notes?: string
+      download_url?: string
+      is_force_update?: boolean
+      is_active?: boolean
+    }
+
+    // ==================== 违禁词管理 ====================
+
+    /** 违禁词 */
+    interface BannedWord {
+      id: number
+      word: string
+      category_id: number | null
+      severity: string
+      is_active: boolean
+      created_at: string
+      updated_at: string
+    }
+
+    /** 违禁词搜索参数 */
+    interface BannedWordSearchParams extends Api.Common.CommonSearchParams {
+      word?: string
+      category_id?: string
+      severity?: string
+    }
+
+    /** 违禁词分类 */
+    interface BannedWordCategory {
+      id: number
+      name: string
+      description: string
+      created_at: string
+    }
+
+    // ==================== 系统通知管理 ====================
+
+    /** 系统通知 */
+    interface SystemNotification {
+      id: number
+      title: string
+      content: string
+      type: string
+      status: string
+      target_type: string
+      target_id: number | null
+      created_at: string
+      sent_at: string | null
+    }
+
+    /** 系统通知搜索参数 */
+    interface SystemNotificationSearchParams extends Api.Common.CommonSearchParams {
+      type?: string
+      status?: string
+    }
+
+    /** 系统通知创建参数 */
+    interface SystemNotificationFormParams {
+      title: string
+      content: string
+      type?: string
+      target_type?: string
+      target_id?: number
+    }
+
+    // ==================== 内容审核管理 ====================
+
+    /** 内容审核记录 */
+    interface ContentReview {
+      id: number
+      content_type: string
+      content_id: number
+      content: string
+      user_id: number
+      user_display_id: string
+      status: string
+      ai_result: string | null
+      reviewer_id: number | null
+      reviewed_at: string | null
+      created_at: string
+    }
+
+    /** 内容审核搜索参数 */
+    interface ContentReviewSearchParams extends Api.Common.CommonSearchParams {
+      status?: string
+      content_type?: string
+    }
+
+    // ==================== 队列监控 ====================
+
+    /** 队列信息 */
+    interface QueueInfo {
+      name: string
+      waiting: number
+      active: number
+      completed: number
+      failed: number
+      delayed: number
+      total: number
+    }
+
+    /** 队列列表响应 */
+    interface QueuesResponse {
+      enabled: boolean
+      queues: QueueInfo[]
+    }
+
+    /** 队列任务 */
+    interface QueueJob {
+      id: string
+      name: string
+      data: any
+      status: string
+      attemptsMade: number
+      timestamp: number
+      processedOn: number | null
+      finishedOn: number | null
+      failedReason: string | null
+    }
   }
 
   /** 系统管理类型（保留兼容） */
