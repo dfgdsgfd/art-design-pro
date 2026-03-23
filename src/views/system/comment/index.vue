@@ -53,6 +53,7 @@
     pending: { type: 'warning', text: '待审核' },
     rejected: { type: 'danger', text: '已拒绝' }
   }
+  const DEFAULT_AUDIT_STATUS = { type: 'info' as const, text: '未知' }
 
   const {
     columns,
@@ -87,7 +88,7 @@
           label: '审核状态',
           width: 100,
           formatter: (row: Api.Admin.Comment) => {
-            const config = AUDIT_STATUS_CONFIG[row.audit_status] || { type: 'info' as const, text: row.audit_status }
+            const config = AUDIT_STATUS_CONFIG[row.audit_status] || DEFAULT_AUDIT_STATUS
             return h(ElTag, { type: config.type, size: 'small' }, () => config.text)
           }
         },

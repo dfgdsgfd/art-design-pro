@@ -95,6 +95,7 @@
     1: { type: 'success', text: '图文' },
     2: { type: 'warning', text: '视频' }
   }
+  const DEFAULT_POST_TYPE = { type: 'info' as const, text: '未知' }
 
   const {
     columns,
@@ -129,7 +130,7 @@
           label: '类型',
           width: 80,
           formatter: (row: Api.Admin.Post) => {
-            const config = POST_TYPE_CONFIG[row.type] || { type: 'info' as const, text: '未知' }
+            const config = POST_TYPE_CONFIG[row.type] || DEFAULT_POST_TYPE
             return h(ElTag, { type: config.type, size: 'small' }, () => config.text)
           }
         },
