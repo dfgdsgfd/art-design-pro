@@ -31,6 +31,7 @@
             />
             <ElButton type="primary" @click="handleSearch" v-ripple>搜索</ElButton>
             <ElButton @click="showBatchDialog" v-ripple>批量生成</ElButton>
+            <ElButton @click="showCreateDialog" v-ripple>单个生成</ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -60,6 +61,39 @@
           <ElButton type="primary" @click="handleBatchSubmit">确定</ElButton>
         </template>
       </ElDialog>
+
+      <!-- 单个生成许可证 -->
+      <ElDialog v-model="createDialogVisible" title="生成许可证" width="400px" align-center>
+        <ElForm ref="createFormRef" :model="createFormData" label-width="80px">
+          <ElFormItem label="备注">
+            <ElInput v-model="createFormData.remark" type="textarea" :rows="3" placeholder="可选备注" />
+          </ElFormItem>
+        </ElForm>
+        <template #footer>
+          <ElButton @click="createDialogVisible = false">取消</ElButton>
+          <ElButton type="primary" @click="handleCreateSubmit">确定</ElButton>
+        </template>
+      </ElDialog>
+
+      <!-- 详情抽屉 -->
+      <ElDrawer v-model="detailVisible" title="许可证详情" size="50%">
+        <template v-if="detailData">
+          <ElDescriptions :column="2" border>
+            <ElDescriptions-item label="ID">{{ detailData.id }}</ElDescriptions-item>
+            <ElDescriptions-item label="状态">
+              <ElTag :type="detailData.is_active ? 'success' : 'danger'" size="small">
+                {{ detailData.is_active ? '激活' : '未激活' }}
+              </ElTag>
+            </ElDescriptions-item>
+            <ElDescriptions-item label="许可证" :span="2">{{ detailData.license_key }}</ElDescriptions-item>
+            <ElDescriptions-item label="机器型号">{{ detailData.machine_model || '-' }}</ElDescriptions-item>
+            <ElDescriptions-item label="机器ID">{{ detailData.machine_id || '-' }}</ElDescriptions-item>
+            <ElDescriptions-item label="备注" :span="2">{{ detailData.remark || '-' }}</ElDescriptions-item>
+            <ElDescriptions-item label="最后验证时间">{{ detailData.last_verified_at || '-' }}</ElDescriptions-item>
+            <ElDescriptions-item label="创建时间">{{ detailData.created_at }}</ElDescriptions-item>
+          </ElDescriptions>
+        </template>
+      </ElDrawer>
     </ElCard>
   </div>
 </template>
@@ -71,9 +105,10 @@
     fetchGetLicenseList,
     fetchGetLicenseStats,
     fetchDeleteLicense,
-    fetchBatchCreateLicenses
+    fetchBatchCreateLicenses,
+    fetchCreateLicense
   } from '@/api/system-manage'
-  import { ElTag, ElMessageBox } from 'element-plus'
+  import { ElTag, ElMessageBox, ElButton as ElBtn } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
 
   defineOptions({ name: 'LicenseManage' })
@@ -86,6 +121,13 @@
   const batchFormRules: FormRules = {
     count: [{ required: true, message: '请输入数量', trigger: 'blur' }]
   }
+
+  const detailVisible = ref(false)
+  const detailData = ref<Api.Admin.License | null>(null)
+
+  const createDialogVisible = ref(false)
+  const createFormRef = ref<FormInstance>()
+  const createFormData = reactive({ remark: '' })
 
   const loadStats = async () => {
     try {
@@ -130,10 +172,13 @@
         {
           prop: 'operation',
           label: '操作',
-          width: 80,
+          width: 150,
           fixed: 'right',
           formatter: (row: Api.Admin.License) =>
-            h('div', [h(ArtButtonTable, { type: 'delete', onClick: () => handleDelete(row.id) })])
+            h('div', { class: 'flex gap-1' }, [
+              h(ElBtn, { size: 'small', onClick: () => showDetail(row) }, () => '查看'),
+              h(ArtButtonTable, { type: 'delete', onClick: () => handleDelete(row.id) })
+            ])
         }
       ]
     }
@@ -151,6 +196,26 @@
   const handleSearch = () => {
     replaceSearchParams({ license_key: searchKey.value || undefined })
     getData()
+  }
+
+  const showDetail = (row: Api.Admin.License) => {
+    detailData.value = row
+    detailVisible.value = true
+  }
+
+  const showCreateDialog = () => {
+    createFormData.remark = ''
+    nextTick(() => {
+      createFormRef.value?.clearValidate()
+      createDialogVisible.value = true
+    })
+  }
+
+  const handleCreateSubmit = async () => {
+    await fetchCreateLicense({ remark: createFormData.remark || undefined })
+    createDialogVisible.value = false
+    refreshData()
+    loadStats()
   }
 
   const showBatchDialog = () => {

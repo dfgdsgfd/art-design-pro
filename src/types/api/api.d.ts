@@ -541,6 +541,219 @@ declare namespace Api {
       finishedOn: number | null
       failedReason: string | null
     }
+
+    // ==================== 通知模板管理 ====================
+
+    /** 通知模板 */
+    interface NotificationTemplate {
+      id: number
+      name: string
+      type: string
+      subject: string
+      content: string
+      variables: string
+      is_active: boolean
+      created_at: string
+      updated_at: string
+    }
+
+    /** 通知模板搜索参数 */
+    interface NotificationTemplateSearchParams extends Api.Common.CommonSearchParams {
+      type?: string
+      is_active?: string
+    }
+
+    /** 通知模板表单参数 */
+    interface NotificationTemplateFormParams {
+      name?: string
+      type?: string
+      subject?: string
+      content?: string
+      variables?: string
+      is_active?: boolean
+    }
+
+    // ==================== 开放API管理 ====================
+
+    /** 开放API */
+    interface OpenApi {
+      id: number
+      name: string
+      api_key: string
+      api_secret: string
+      permissions: string
+      rate_limit: number
+      is_active: boolean
+      expires_at: string | null
+      created_at: string
+      updated_at: string
+    }
+
+    /** 开放API搜索参数 */
+    interface OpenApiSearchParams extends Api.Common.CommonSearchParams {
+      name?: string
+      is_active?: string
+    }
+
+    /** 开放API表单参数 */
+    interface OpenApiFormParams {
+      name?: string
+      permissions?: string
+      rate_limit?: number
+      is_active?: boolean
+      expires_at?: string
+    }
+
+    // ==================== 监控动态 ====================
+
+    /** 监控动态记录 */
+    interface MonitorActivity {
+      id: string
+      type: string
+      user_id: string
+      nickname: string
+      avatar: string
+      title: string
+      content: string
+      target_id: number
+      created_at: string
+    }
+
+    // ==================== 用户工具栏管理 ====================
+
+    /** 工具栏项 */
+    interface UserToolbar {
+      id: number
+      name: string
+      icon: string
+      url: string
+      sort_order: number
+      is_active: boolean
+      created_at: string
+      updated_at: string
+    }
+
+    /** 工具栏搜索参数 */
+    interface UserToolbarSearchParams extends Api.Common.CommonSearchParams {
+      name?: string
+      is_active?: string
+    }
+
+    /** 工具栏表单参数 */
+    interface UserToolbarFormParams {
+      name?: string
+      icon?: string
+      url?: string
+      sort_order?: number
+      is_active?: boolean
+    }
+
+    // ==================== 推荐管理 ====================
+
+    /** 推荐全局配置 */
+    interface RecommendationConfig {
+      like_weight: number
+      collect_weight: number
+      view_weight: number
+      category_weight: number
+      tag_weight: number
+      following_weight: number
+      mutual_follow_weight: number
+      popularity_weight: number
+      interest_weight: number
+      time_decay_half_life: number
+      content_type_boost_image: number
+      content_type_boost_video: number
+      content_type_boost_external: number
+      candidate_pool_multiplier: number
+      max_recommended: number
+      max_hot: number
+      [key: string]: number
+    }
+
+    // ==================== 系统设置 ====================
+
+    /** 系统设置分类 */
+    interface SystemSettingsResponse {
+      [category: string]: {
+        label: string
+        settings: {
+          [key: string]: {
+            label: string
+            description: string
+            value: any
+            type: string
+          }
+        }
+      }
+    }
+
+    // ==================== 批量上传 ====================
+
+    /** 批量上传文件 */
+    interface BatchUploadFile {
+      name: string
+      size: number
+      path: string
+      createdAt: string
+    }
+
+    /** 批量上传文件列表响应 */
+    interface BatchUploadFilesResponse {
+      images: BatchUploadFile[]
+      videos?: BatchUploadFile[]
+    }
+
+    // ==================== 帖子质量 ====================
+
+    /** 帖子质量项 */
+    interface PostQuality {
+      id: number
+      user_id: number
+      title: string
+      content: string
+      type: number
+      view_count: number
+      like_count: number
+      collect_count: number
+      comment_count: number
+      created_at: string
+      is_draft: boolean
+      user_display_id: string
+      nickname: string
+      quality_level: string
+      quality_marked_at: string | null
+      quality_reward: number | null
+      cover: string
+    }
+
+    /** 帖子质量搜索参数 */
+    interface PostQualitySearchParams extends Api.Common.CommonSearchParams {
+      quality_level?: string
+    }
+
+    // ==================== 质量奖励设置 ====================
+
+    /** 质量奖励设置项 */
+    interface QualityRewardSetting {
+      id: number
+      quality_level: string
+      reward_amount: number
+      description: string
+      is_active: boolean
+      created_at: string
+      updated_at: string
+    }
+
+    // ==================== APK文件 ====================
+
+    /** APK文件 */
+    interface ApkFile {
+      name: string
+      size: number
+      url: string
+      createdAt: string
+    }
   }
 
   /** 系统管理类型（保留兼容） */

@@ -50,13 +50,36 @@
           <ElButton type="primary" @click="handleRejectSubmit">确定</ElButton>
         </template>
       </ElDialog>
+
+      <!-- 详情抽屉 -->
+      <ElDrawer v-model="detailVisible" title="认证详情" size="50%">
+        <template v-if="detailData">
+          <ElDescriptions :column="2" border>
+            <ElDescriptions-item label="ID">{{ detailData.id }}</ElDescriptions-item>
+            <ElDescriptions-item label="用户ID">{{ detailData.user_display_id }}</ElDescriptions-item>
+            <ElDescriptions-item label="昵称">{{ detailData.nickname }}</ElDescriptions-item>
+            <ElDescriptions-item label="状态">
+              <ElTag :type="(AUDIT_STATUS_CONFIG[detailData.status] || UNKNOWN_STATUS).type" size="small">
+                {{ (AUDIT_STATUS_CONFIG[detailData.status] || UNKNOWN_STATUS).text }}
+              </ElTag>
+            </ElDescriptions-item>
+            <ElDescriptions-item label="申请时间">{{ detailData.created_at }}</ElDescriptions-item>
+            <ElDescriptions-item label="审核时间">{{ detailData.audit_time || '未审核' }}</ElDescriptions-item>
+            <ElDescriptions-item v-if="detailData.reason" label="拒绝原因" :span="2">{{ detailData.reason }}</ElDescriptions-item>
+          </ElDescriptions>
+          <div class="mt-4">
+            <h4 class="text-sm font-medium mb-2">认证内容</h4>
+            <div class="border rounded p-4" v-html="detailData.content" />
+          </div>
+        </template>
+      </ElDrawer>
     </ElCard>
   </div>
 </template>
 
 <script setup lang="ts">
   import { useTable } from '@/hooks/core/useTable'
-  import { fetchGetAuditList, fetchApproveAudit, fetchRejectAudit } from '@/api/system-manage'
+  import { fetchGetAuditList, fetchGetAudit, fetchApproveAudit, fetchRejectAudit } from '@/api/system-manage'
   import { ElTag, ElMessageBox, ElImage, ElButton as ElBtn } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
 
@@ -70,6 +93,9 @@
   const rejectFormRules: FormRules = {
     reason: [{ required: true, message: '请输入拒绝原因', trigger: 'blur' }]
   }
+
+  const detailVisible = ref(false)
+  const detailData = ref<Api.Admin.AuditRecord | null>(null)
 
   const AUDIT_STATUS_CONFIG: Record<
     number,
@@ -131,23 +157,18 @@
         {
           prop: 'operation',
           label: '操作',
-          width: 150,
+          width: 200,
           fixed: 'right',
           formatter: (row: Api.Admin.AuditRecord) =>
-            row.status === 0
-              ? h('div', { class: 'flex gap-1' }, [
-                  h(
-                    ElBtn,
-                    { type: 'primary', size: 'small', onClick: () => handleApprove(row.id) },
-                    () => '通过'
-                  ),
-                  h(
-                    ElBtn,
-                    { type: 'danger', size: 'small', onClick: () => showRejectDialog(row.id) },
-                    () => '拒绝'
-                  )
-                ])
-              : h('span', { class: 'text-gray-400 text-sm' }, '已处理')
+            h('div', { class: 'flex gap-1' }, [
+              h(ElBtn, { size: 'small', onClick: () => showDetail(row.id) }, () => '查看'),
+              ...(row.status === 0
+                ? [
+                    h(ElBtn, { type: 'primary', size: 'small', onClick: () => handleApprove(row.id) }, () => '通过'),
+                    h(ElBtn, { type: 'danger', size: 'small', onClick: () => showRejectDialog(row.id) }, () => '拒绝')
+                  ]
+                : [])
+            ])
         }
       ]
     }
@@ -156,6 +177,16 @@
   const handleSearch = () => {
     replaceSearchParams({ status: searchStatus.value || undefined })
     getData()
+  }
+
+  const showDetail = async (id: number) => {
+    try {
+      const res = await fetchGetAudit(id)
+      detailData.value = res
+      detailVisible.value = true
+    } catch {
+      // ignore
+    }
   }
 
   const handleApprove = (id: number) => {
