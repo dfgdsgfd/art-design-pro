@@ -1,0 +1,203 @@
+<template>
+  <div class="art-full-height">
+    <ElCard class="art-table-card">
+      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
+        <template #left>
+          <ElSpace wrap>
+            <ElSelect
+              v-model="searchStatus"
+              placeholder="审核状态"
+              clearable
+              style="width: 150px"
+              @change="handleSearch"
+            >
+              <ElOption label="待审核" value="pending" />
+              <ElOption label="已通过" value="approved" />
+              <ElOption label="已拒绝" value="rejected" />
+            </ElSelect>
+            <ElSelect
+              v-model="searchType"
+              placeholder="内容类型"
+              clearable
+              style="width: 150px"
+              @change="handleSearch"
+            >
+              <ElOption label="帖子" value="post" />
+              <ElOption label="评论" value="comment" />
+              <ElOption label="用户名" value="username" />
+            </ElSelect>
+            <ElButton type="primary" @click="handleSearch" v-ripple>搜索</ElButton>
+          </ElSpace>
+        </template>
+      </ArtTableHeader>
+
+      <ArtTable
+        :loading="loading"
+        :data="data"
+        :columns="columns"
+        :pagination="pagination"
+        @pagination:size-change="handleSizeChange"
+        @pagination:current-change="handleCurrentChange"
+      />
+
+      <ElDialog v-model="rejectDialogVisible" title="拒绝原因" width="400px" align-center>
+        <ElForm
+          ref="rejectFormRef"
+          :model="rejectFormData"
+          :rules="rejectFormRules"
+          label-width="80px"
+        >
+          <ElFormItem label="原因" prop="reason">
+            <ElInput
+              v-model="rejectFormData.reason"
+              type="textarea"
+              :rows="3"
+              placeholder="请输入拒绝原因"
+            />
+          </ElFormItem>
+        </ElForm>
+        <template #footer>
+          <ElButton @click="rejectDialogVisible = false">取消</ElButton>
+          <ElButton type="primary" @click="handleRejectSubmit">确定</ElButton>
+        </template>
+      </ElDialog>
+    </ElCard>
+  </div>
+</template>
+
+<script setup lang="ts">
+  import { useTable } from '@/hooks/core/useTable'
+  import {
+    fetchGetContentReviewList,
+    fetchApproveContentReview,
+    fetchRejectContentReview
+  } from '@/api/system-manage'
+  import { ElTag, ElMessageBox, ElButton as ElBtn } from 'element-plus'
+  import type { FormInstance, FormRules } from 'element-plus'
+
+  defineOptions({ name: 'ContentReviewManage' })
+
+  const searchStatus = ref('')
+  const searchType = ref('')
+  const rejectDialogVisible = ref(false)
+  const currentRejectId = ref<number>(0)
+  const rejectFormRef = ref<FormInstance>()
+  const rejectFormData = reactive({ reason: '' })
+  const rejectFormRules: FormRules = {
+    reason: [{ required: true, message: '请输入拒绝原因', trigger: 'blur' }]
+  }
+
+  const STATUS_CONFIG: Record<string, { type: 'warning' | 'success' | 'danger'; text: string }> = {
+    pending: { type: 'warning', text: '待审核' },
+    approved: { type: 'success', text: '已通过' },
+    rejected: { type: 'danger', text: '已拒绝' }
+  }
+  const UNKNOWN_STATUS = { type: 'info' as const, text: '未知' }
+
+  const TYPE_MAP: Record<string, string> = {
+    post: '帖子',
+    comment: '评论',
+    username: '用户名'
+  }
+
+  const {
+    columns,
+    columnChecks,
+    data,
+    loading,
+    pagination,
+    getData,
+    replaceSearchParams,
+    handleSizeChange,
+    handleCurrentChange,
+    refreshData,
+    refreshUpdate
+  } = useTable({
+    core: {
+      apiFn: fetchGetContentReviewList,
+      apiParams: { page: 1, limit: 20 },
+      columnsFactory: () => [
+        { type: 'index', width: 60, label: '序号' },
+        {
+          prop: 'content_type',
+          label: '类型',
+          width: 80,
+          formatter: (row: Api.Admin.ContentReview) =>
+            h(ElTag, { size: 'small' }, () => TYPE_MAP[row.content_type] || row.content_type)
+        },
+        { prop: 'content', label: '内容', minWidth: 250, showOverflowTooltip: true },
+        { prop: 'user_display_id', label: '用户ID', width: 120 },
+        {
+          prop: 'status',
+          label: '状态',
+          width: 100,
+          formatter: (row: Api.Admin.ContentReview) => {
+            const config = STATUS_CONFIG[row.status] || UNKNOWN_STATUS
+            return h(ElTag, { type: config.type, size: 'small' }, () => config.text)
+          }
+        },
+        { prop: 'ai_result', label: 'AI结果', minWidth: 150, showOverflowTooltip: true },
+        { prop: 'created_at', label: '创建时间', width: 180, sortable: true },
+        {
+          prop: 'operation',
+          label: '操作',
+          width: 150,
+          fixed: 'right',
+          formatter: (row: Api.Admin.ContentReview) =>
+            row.status === 'pending'
+              ? h('div', { class: 'flex gap-1' }, [
+                  h(
+                    ElBtn,
+                    { type: 'primary', size: 'small', onClick: () => handleApprove(row.id) },
+                    () => '通过'
+                  ),
+                  h(
+                    ElBtn,
+                    { type: 'danger', size: 'small', onClick: () => showRejectDialog(row.id) },
+                    () => '拒绝'
+                  )
+                ])
+              : h('span', { class: 'text-gray-400 text-sm' }, '已处理')
+        }
+      ]
+    }
+  })
+
+  const handleSearch = () => {
+    replaceSearchParams({
+      status: searchStatus.value || undefined,
+      content_type: searchType.value || undefined
+    })
+    getData()
+  }
+
+  const handleApprove = (id: number) => {
+    ElMessageBox.confirm('确定要通过该审核吗？', '审核确认', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'info'
+    }).then(async () => {
+      await fetchApproveContentReview(id)
+      refreshUpdate()
+    })
+  }
+
+  const showRejectDialog = (id: number) => {
+    currentRejectId.value = id
+    rejectFormData.reason = ''
+    nextTick(() => {
+      rejectFormRef.value?.clearValidate()
+      rejectDialogVisible.value = true
+    })
+  }
+
+  const handleRejectSubmit = async () => {
+    if (!rejectFormRef.value) return
+    await rejectFormRef.value.validate(async (valid) => {
+      if (!valid) return
+      await fetchRejectContentReview(currentRejectId.value, { reason: rejectFormData.reason })
+      rejectDialogVisible.value = false
+      refreshUpdate()
+    })
+  }
+</script>

@@ -295,6 +295,17 @@
       "tag": "Tag Management",
       "category": "Category Management",
       "admin": "Admin Management",
+      "like": "Like Management",
+      "follow": "Follow Management",
+      "collection": "Collection Management",
+      "session": "Session Management",
+      "audit": "Audit Verification",
+      "license": "License Management",
+      "appVersion": "App Version",
+      "bannedWord": "Banned Word",
+      "notification": "System Notification",
+      "contentReview": "Content Review",
+      "queue": "Queue Monitor",
       "userCenter": "User Center"
     },
     "safeguard": {

@@ -295,6 +295,17 @@
       "tag": "标签管理",
       "category": "分类管理",
       "admin": "管理员管理",
+      "like": "点赞管理",
+      "follow": "关注管理",
+      "collection": "收藏管理",
+      "session": "会话管理",
+      "audit": "认证审核",
+      "license": "许可证管理",
+      "appVersion": "应用版本",
+      "bannedWord": "违禁词管理",
+      "notification": "系统通知",
+      "contentReview": "内容审核",
+      "queue": "队列监控",
       "userCenter": "个人中心"
     },
     "safeguard": {
