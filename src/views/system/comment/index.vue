@@ -35,6 +35,22 @@
         @pagination:current-change="handleCurrentChange"
       />
     </ElCard>
+
+    <ElDrawer v-model="detailVisible" title="评论详情" size="400px">
+      <ElDescriptions v-if="detailData" :column="1" border>
+        <ElDescriptionsItem label="ID">{{ detailData.id }}</ElDescriptionsItem>
+        <ElDescriptionsItem label="评论内容">{{ detailData.content }}</ElDescriptionsItem>
+        <ElDescriptionsItem label="帖子ID">{{ detailData.post_id }}</ElDescriptionsItem>
+        <ElDescriptionsItem label="用户ID">{{ detailData.user_id }}</ElDescriptionsItem>
+        <ElDescriptionsItem label="父评论ID">{{ detailData.parent_id ?? '-' }}</ElDescriptionsItem>
+        <ElDescriptionsItem label="审核状态">
+          <ElTag :type="(AUDIT_STATUS_CONFIG[detailData.audit_status] || UNKNOWN_AUDIT_STATUS).type" size="small">
+            {{ (AUDIT_STATUS_CONFIG[detailData.audit_status] || UNKNOWN_AUDIT_STATUS).text }}
+          </ElTag>
+        </ElDescriptionsItem>
+        <ElDescriptionsItem label="创建时间">{{ detailData.created_at }}</ElDescriptionsItem>
+      </ElDescriptions>
+    </ElDrawer>
   </div>
 </template>
 
@@ -44,14 +60,17 @@
   import {
     fetchGetCommentList,
     fetchDeleteComment,
-    fetchBatchDeleteComments
+    fetchBatchDeleteComments,
+    fetchGetComment
   } from '@/api/system-manage'
-  import { ElTag, ElMessageBox } from 'element-plus'
+  import { ElTag, ElMessageBox, ElDrawer, ElDescriptions, ElDescriptionsItem } from 'element-plus'
 
   defineOptions({ name: 'CommentManage' })
 
   const searchContent = ref('')
   const selectedIds = ref<number[]>([])
+  const detailVisible = ref(false)
+  const detailData = ref<Api.Admin.Comment | null>(null)
 
   const AUDIT_STATUS_CONFIG: Record<
     string,
@@ -104,10 +123,13 @@
         {
           prop: 'operation',
           label: '操作',
-          width: 80,
+          width: 120,
           fixed: 'right',
           formatter: (row: Api.Admin.Comment) =>
-            h('div', [h(ArtButtonTable, { type: 'delete', onClick: () => handleDelete(row.id) })])
+            h('div', [
+              h(ArtButtonTable, { type: 'view', onClick: () => handleView(row.id) }),
+              h(ArtButtonTable, { type: 'delete', onClick: () => handleDelete(row.id) })
+            ])
         }
       ]
     }
@@ -116,6 +138,12 @@
   const handleSearch = () => {
     replaceSearchParams({ content: searchContent.value || undefined })
     getData()
+  }
+
+  const handleView = async (id: number) => {
+    const res = await fetchGetComment(id)
+    detailData.value = res
+    detailVisible.value = true
   }
 
   const handleSelectionChange = (selection: Api.Admin.Comment[]) => {

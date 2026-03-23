@@ -13,6 +13,14 @@
               @keyup.enter="handleSearch"
             />
             <ElButton type="primary" @click="handleSearch" v-ripple>搜索</ElButton>
+            <ElButton
+              type="danger"
+              :disabled="selectedIds.length === 0"
+              @click="handleBatchDelete"
+              v-ripple
+            >
+              批量删除
+            </ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -22,6 +30,7 @@
         :data="data"
         :columns="columns"
         :pagination="pagination"
+        @selection-change="handleSelectionChange"
         @pagination:size-change="handleSizeChange"
         @pagination:current-change="handleCurrentChange"
       />
@@ -32,12 +41,13 @@
 <script setup lang="ts">
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTable } from '@/hooks/core/useTable'
-  import { fetchGetSessionList, fetchDeleteSession } from '@/api/system-manage'
+  import { fetchGetSessionList, fetchDeleteSession, fetchBatchDeleteSessions } from '@/api/system-manage'
   import { ElTag, ElMessageBox } from 'element-plus'
 
   defineOptions({ name: 'SessionManage' })
 
   const searchUserId = ref('')
+  const selectedIds = ref<number[]>([])
 
   const {
     columns,
@@ -56,6 +66,7 @@
       apiFn: fetchGetSessionList,
       apiParams: { page: 1, limit: 20 },
       columnsFactory: () => [
+        { type: 'selection' },
         { type: 'index', width: 60, label: '序号' },
         { prop: 'user_id', label: '用户ID', width: 100 },
         { prop: 'user_agent', label: 'User Agent', minWidth: 200, showOverflowTooltip: true },
@@ -87,6 +98,10 @@
     getData()
   }
 
+  const handleSelectionChange = (selection: Api.Admin.Session[]) => {
+    selectedIds.value = selection.map((item) => item.id)
+  }
+
   const handleDelete = (id: number) => {
     ElMessageBox.confirm('确定要删除该会话吗？', '删除确认', {
       confirmButtonText: '确定',
@@ -95,6 +110,22 @@
     }).then(async () => {
       await fetchDeleteSession(id)
       refreshRemove()
+    })
+  }
+
+  const handleBatchDelete = () => {
+    ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedIds.value.length} 条会话吗？`,
+      '批量删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(async () => {
+      await fetchBatchDeleteSessions(selectedIds.value)
+      refreshRemove()
+      selectedIds.value = []
     })
   }
 </script>

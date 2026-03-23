@@ -70,7 +70,8 @@
   import {
     fetchGetContentReviewList,
     fetchApproveContentReview,
-    fetchRejectContentReview
+    fetchRejectContentReview,
+    fetchRetryContentReview
   } from '@/api/system-manage'
   import { ElTag, ElMessageBox, ElButton as ElBtn } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
@@ -87,10 +88,11 @@
     reason: [{ required: true, message: '请输入拒绝原因', trigger: 'blur' }]
   }
 
-  const STATUS_CONFIG: Record<string, { type: 'warning' | 'success' | 'danger'; text: string }> = {
+  const STATUS_CONFIG: Record<string, { type: 'warning' | 'success' | 'danger' | 'info'; text: string }> = {
     pending: { type: 'warning', text: '待审核' },
     approved: { type: 'success', text: '已通过' },
-    rejected: { type: 'danger', text: '已拒绝' }
+    rejected: { type: 'danger', text: '已拒绝' },
+    failed: { type: 'danger', text: '失败' }
   }
   const UNKNOWN_STATUS = { type: 'info' as const, text: '未知' }
 
@@ -141,23 +143,35 @@
         {
           prop: 'operation',
           label: '操作',
-          width: 150,
+          width: 200,
           fixed: 'right',
-          formatter: (row: Api.Admin.ContentReview) =>
-            row.status === 'pending'
-              ? h('div', { class: 'flex gap-1' }, [
-                  h(
-                    ElBtn,
-                    { type: 'primary', size: 'small', onClick: () => handleApprove(row.id) },
-                    () => '通过'
-                  ),
-                  h(
-                    ElBtn,
-                    { type: 'danger', size: 'small', onClick: () => showRejectDialog(row.id) },
-                    () => '拒绝'
-                  )
-                ])
-              : h('span', { class: 'text-gray-400 text-sm' }, '已处理')
+          formatter: (row: Api.Admin.ContentReview) => {
+            if (row.status === 'pending') {
+              return h('div', { class: 'flex gap-1' }, [
+                h(
+                  ElBtn,
+                  { type: 'primary', size: 'small', onClick: () => handleApprove(row.id) },
+                  () => '通过'
+                ),
+                h(
+                  ElBtn,
+                  { type: 'danger', size: 'small', onClick: () => showRejectDialog(row.id) },
+                  () => '拒绝'
+                )
+              ])
+            }
+            if (row.status === 'rejected' || row.status === 'failed') {
+              return h('div', { class: 'flex gap-1' }, [
+                h('span', { class: 'text-gray-400 text-sm' }, '已处理'),
+                h(
+                  ElBtn,
+                  { type: 'warning', size: 'small', onClick: () => handleRetry(row.id) },
+                  () => '重试'
+                )
+              ])
+            }
+            return h('span', { class: 'text-gray-400 text-sm' }, '已处理')
+          }
         }
       ]
     }
@@ -169,6 +183,17 @@
       content_type: searchType.value || undefined
     })
     getData()
+  }
+
+  const handleRetry = (id: number) => {
+    ElMessageBox.confirm('确定要重试该审核吗？', '重试确认', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'info'
+    }).then(async () => {
+      await fetchRetryContentReview(id)
+      refreshUpdate()
+    })
   }
 
   const handleApprove = (id: number) => {

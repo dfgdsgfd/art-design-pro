@@ -13,6 +13,14 @@
               @keyup.enter="handleSearch"
             />
             <ElButton type="primary" @click="handleSearch" v-ripple>搜索</ElButton>
+            <ElButton
+              type="danger"
+              :disabled="selectedIds.length === 0"
+              @click="handleBatchDelete"
+              v-ripple
+            >
+              批量删除
+            </ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -22,6 +30,7 @@
         :data="data"
         :columns="columns"
         :pagination="pagination"
+        @selection-change="handleSelectionChange"
         @pagination:size-change="handleSizeChange"
         @pagination:current-change="handleCurrentChange"
       />
@@ -32,12 +41,13 @@
 <script setup lang="ts">
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTable } from '@/hooks/core/useTable'
-  import { fetchGetFollowList, fetchDeleteFollow } from '@/api/system-manage'
+  import { fetchGetFollowList, fetchDeleteFollow, fetchBatchDeleteFollows } from '@/api/system-manage'
   import { ElMessageBox } from 'element-plus'
 
   defineOptions({ name: 'FollowManage' })
 
   const searchFollowerId = ref('')
+  const selectedIds = ref<number[]>([])
 
   const {
     columns,
@@ -56,6 +66,7 @@
       apiFn: fetchGetFollowList,
       apiParams: { page: 1, limit: 20 },
       columnsFactory: () => [
+        { type: 'selection' },
         { type: 'index', width: 60, label: '序号' },
         { prop: 'id', label: 'ID', width: 80 },
         { prop: 'follower_id', label: '关注者ID', width: 120 },
@@ -78,6 +89,10 @@
     getData()
   }
 
+  const handleSelectionChange = (selection: Api.Admin.Follow[]) => {
+    selectedIds.value = selection.map((item) => item.id)
+  }
+
   const handleDelete = (id: number) => {
     ElMessageBox.confirm('确定要删除该关注记录吗？', '删除确认', {
       confirmButtonText: '确定',
@@ -86,6 +101,22 @@
     }).then(async () => {
       await fetchDeleteFollow(id)
       refreshRemove()
+    })
+  }
+
+  const handleBatchDelete = () => {
+    ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedIds.value.length} 条关注记录吗？`,
+      '批量删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(async () => {
+      await fetchBatchDeleteFollows(selectedIds.value)
+      refreshRemove()
+      selectedIds.value = []
     })
   }
 </script>
