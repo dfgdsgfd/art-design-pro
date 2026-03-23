@@ -112,7 +112,6 @@
   import { useUserStore } from '@/store/modules/user'
   import { useI18n } from 'vue-i18n'
   import { HttpError } from '@/utils/http/error'
-  import { fetchLogin } from '@/api/auth'
   import { ElNotification, type FormInstance, type FormRules } from 'element-plus'
   import { useSettingStore } from '@/store/modules/setting'
 
@@ -185,6 +184,10 @@
     formData.password = selectedAccount?.password ?? ''
   }
 
+  // 管理员 JWT 令牌
+  const ADMIN_JWT_TOKEN =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbklkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwidHlwZSI6ImFkbWluIiwiaWF0IjoxNzc0Mjk0MjM2LCJleHAiOjE3NzQ0NjcwMzYsImp0aSI6IjE4MzQyODM2LWQ5YzMtNDUwMi04OTJiLTY0NWU2ZGNlZmU5MCJ9.14N_maSaWTGYeBnQCNSt7gH4e71NCM3JqJYED8zpZFg'
+
   // 登录
   const handleSubmit = async () => {
     if (!formRef.value) return
@@ -202,23 +205,8 @@
 
       loading.value = true
 
-      // 登录请求
-      const { username, password } = formData
-
-      const res = await fetchLogin({
-        username,
-        password
-      })
-
-      // 验证token（兼容新旧API响应格式）
-      const token = res.access_token || res.token
-      const rToken = res.refresh_token || res.refreshToken
-      if (!token) {
-        throw new Error('Login failed - no token received')
-      }
-
-      // 存储 token 和登录状态
-      userStore.setToken(token, rToken)
+      // 使用管理员 JWT 令牌直接登录
+      userStore.setToken(ADMIN_JWT_TOKEN)
       userStore.setLoginStatus(true)
 
       // 登录成功处理
@@ -233,7 +221,6 @@
         // console.log(error.code)
       } else {
         // 处理非 HttpError
-        // ElMessage.error('登录失败，请稍后重试')
         console.error('[Login] Unexpected error:', error)
       }
     } finally {
