@@ -51,6 +51,7 @@ import { useWorktabStore } from '@/store/modules/worktab'
 import { fetchGetUserInfo } from '@/api/auth'
 import { ApiStatus } from '@/utils/http/status'
 import { isHttpError } from '@/utils/http/error'
+import { useAppMode } from '@/hooks/core/useAppMode'
 import { RouteRegistry, MenuProcessor, IframeRouteManager, RoutePermissionValidator } from '../core'
 
 // 路由注册器实例
@@ -369,8 +370,40 @@ async function handleDynamicRoutes(
  */
 async function fetchUserInfo(): Promise<void> {
   const userStore = useUserStore()
-  const data = await fetchGetUserInfo()
-  userStore.setUserInfo(data)
+  const { isFrontendMode } = useAppMode()
+
+  try {
+    const data = await fetchGetUserInfo()
+    // Adapt admin/me response to UserInfo format
+    const userInfo: Api.Auth.UserInfo = {
+      id: data.id,
+      username: data.username,
+      buttons: data.buttons || [],
+      roles: data.roles || ['R_ADMIN'],
+      userId: data.id || data.userId,
+      userName: data.username || data.userName,
+      email: data.email || '',
+      avatar: data.avatar
+    }
+    userStore.setUserInfo(userInfo)
+  } catch (error) {
+    // 前端模式下用户信息获取失败不阻塞登录，使用默认信息
+    if (isFrontendMode.value) {
+      console.warn('[RouteGuard] 获取用户信息失败，使用默认信息:', error)
+      userStore.setUserInfo({
+        id: 0,
+        username: userStore.info?.username || 'admin',
+        buttons: [],
+        roles: ['R_ADMIN'],
+        userId: 0,
+        userName: userStore.info?.userName || 'admin',
+        email: ''
+      })
+    } else {
+      throw error
+    }
+  }
+
   // 检查并清理工作台标签页（如果是不同用户登录）
   userStore.checkAndClearWorktabs()
 }

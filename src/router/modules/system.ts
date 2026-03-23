@@ -6,30 +6,249 @@ export const systemRoutes: AppRouteRecord = {
   component: '/index/index',
   meta: {
     title: 'menus.system.title',
-    icon: 'ri:user-3-line',
+    icon: 'ri:settings-3-line',
     roles: ['R_SUPER', 'R_ADMIN']
   },
   children: [
     {
       path: 'user',
-      name: 'User',
+      name: 'AdminUser',
       component: '/system/user',
       meta: {
         title: 'menus.system.user',
         icon: 'ri:user-line',
-        keepAlive: true,
-        roles: ['R_SUPER', 'R_ADMIN']
+        keepAlive: true
       }
     },
     {
-      path: 'role',
-      name: 'Role',
-      component: '/system/role',
+      path: 'post',
+      name: 'AdminPost',
+      component: '/system/post',
       meta: {
-        title: 'menus.system.role',
-        icon: 'ri:user-settings-line',
+        title: 'menus.system.post',
+        icon: 'ri:article-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'comment',
+      name: 'AdminComment',
+      component: '/system/comment',
+      meta: {
+        title: 'menus.system.comment',
+        icon: 'ri:chat-3-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'tag',
+      name: 'AdminTag',
+      component: '/system/tag',
+      meta: {
+        title: 'menus.system.tag',
+        icon: 'ri:price-tag-3-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'category',
+      name: 'AdminCategory',
+      component: '/system/category',
+      meta: {
+        title: 'menus.system.category',
+        icon: 'ri:folder-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'admin',
+      name: 'AdminManage',
+      component: '/system/admin',
+      meta: {
+        title: 'menus.system.admin',
+        icon: 'ri:shield-user-line',
         keepAlive: true,
         roles: ['R_SUPER']
+      }
+    },
+    {
+      path: 'like',
+      name: 'AdminLike',
+      component: '/system/like',
+      meta: {
+        title: 'menus.system.like',
+        icon: 'ri:heart-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'follow',
+      name: 'AdminFollow',
+      component: '/system/follow',
+      meta: {
+        title: 'menus.system.follow',
+        icon: 'ri:user-follow-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'collection',
+      name: 'AdminCollection',
+      component: '/system/collection',
+      meta: {
+        title: 'menus.system.collection',
+        icon: 'ri:star-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'session',
+      name: 'AdminSession',
+      component: '/system/session',
+      meta: {
+        title: 'menus.system.session',
+        icon: 'ri:key-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'audit',
+      name: 'AdminAudit',
+      component: '/system/audit',
+      meta: {
+        title: 'menus.system.audit',
+        icon: 'ri:shield-check-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'license',
+      name: 'AdminLicense',
+      component: '/system/license',
+      meta: {
+        title: 'menus.system.license',
+        icon: 'ri:key-2-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'app-version',
+      name: 'AdminAppVersion',
+      component: '/system/app-version',
+      meta: {
+        title: 'menus.system.appVersion',
+        icon: 'ri:smartphone-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'banned-word',
+      name: 'AdminBannedWord',
+      component: '/system/banned-word',
+      meta: {
+        title: 'menus.system.bannedWord',
+        icon: 'ri:forbid-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'notification',
+      name: 'AdminNotification',
+      component: '/system/notification',
+      meta: {
+        title: 'menus.system.notification',
+        icon: 'ri:notification-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'content-review',
+      name: 'AdminContentReview',
+      component: '/system/content-review',
+      meta: {
+        title: 'menus.system.contentReview',
+        icon: 'ri:eye-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'queue',
+      name: 'AdminQueue',
+      component: '/system/queue',
+      meta: {
+        title: 'menus.system.queue',
+        icon: 'ri:stack-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'system-settings',
+      name: 'AdminSystemSettings',
+      component: '/system/system-settings',
+      meta: {
+        title: 'menus.system.systemSettings',
+        icon: 'ri:settings-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'notification-template',
+      name: 'AdminNotificationTemplate',
+      component: '/system/notification-template',
+      meta: {
+        title: 'menus.system.notificationTemplate',
+        icon: 'ri:mail-settings-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'open-api',
+      name: 'AdminOpenApi',
+      component: '/system/open-api',
+      meta: {
+        title: 'menus.system.openApi',
+        icon: 'ri:key-fill',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'monitor',
+      name: 'AdminMonitor',
+      component: '/system/monitor',
+      meta: {
+        title: 'menus.system.monitor',
+        icon: 'ri:pulse-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'user-toolbar',
+      name: 'AdminUserToolbar',
+      component: '/system/user-toolbar',
+      meta: {
+        title: 'menus.system.userToolbar',
+        icon: 'ri:tools-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'recommendation',
+      name: 'AdminRecommendation',
+      component: '/system/recommendation',
+      meta: {
+        title: 'menus.system.recommendation',
+        icon: 'ri:thumb-up-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'batch-upload',
+      name: 'AdminBatchUpload',
+      component: '/system/batch-upload',
+      meta: {
+        title: 'menus.system.batchUpload',
+        icon: 'ri:upload-cloud-line',
+        keepAlive: true
       }
     },
     {
@@ -43,107 +262,6 @@ export const systemRoutes: AppRouteRecord = {
         keepAlive: true,
         isHideTab: true
       }
-    },
-    {
-      path: 'menu',
-      name: 'Menus',
-      component: '/system/menu',
-      meta: {
-        title: 'menus.system.menu',
-        icon: 'ri:menu-line',
-        keepAlive: true,
-        roles: ['R_SUPER'],
-        authList: [
-          { title: '新增', authMark: 'add' },
-          { title: '编辑', authMark: 'edit' },
-          { title: '删除', authMark: 'delete' }
-        ]
-      }
-    },
-    {
-      path: 'nested',
-      name: 'Nested',
-      component: '',
-      meta: {
-        title: 'menus.system.nested',
-        icon: 'ri:menu-unfold-3-line',
-        keepAlive: true
-      },
-      children: [
-        {
-          path: 'menu1',
-          name: 'NestedMenu1',
-          component: '/system/nested/menu1',
-          meta: {
-            title: 'menus.system.menu1',
-            icon: 'ri:align-justify',
-            keepAlive: true
-          }
-        },
-        {
-          path: 'menu2',
-          name: 'NestedMenu2',
-          component: '',
-          meta: {
-            title: 'menus.system.menu2',
-            icon: 'ri:align-justify',
-            keepAlive: true
-          },
-          children: [
-            {
-              path: 'menu2-1',
-              name: 'NestedMenu2-1',
-              component: '/system/nested/menu2',
-              meta: {
-                title: 'menus.system.menu21',
-                icon: 'ri:align-justify',
-                keepAlive: true
-              }
-            }
-          ]
-        },
-        {
-          path: 'menu3',
-          name: 'NestedMenu3',
-          component: '',
-          meta: {
-            title: 'menus.system.menu3',
-            icon: 'ri:align-justify',
-            keepAlive: true
-          },
-          children: [
-            {
-              path: 'menu3-1',
-              name: 'NestedMenu3-1',
-              component: '/system/nested/menu3',
-              meta: {
-                title: 'menus.system.menu31',
-                keepAlive: true
-              }
-            },
-            {
-              path: 'menu3-2',
-              name: 'NestedMenu3-2',
-              component: '',
-              meta: {
-                title: 'menus.system.menu32',
-                keepAlive: true
-              },
-              children: [
-                {
-                  path: 'menu3-2-1',
-                  name: 'NestedMenu3-2-1',
-                  component: '/system/nested/menu3/menu3-2',
-                  meta: {
-                    title: 'menus.system.menu321',
-                    keepAlive: true
-                  }
-                }
-              ]
-            }
-          ]
-        }
-      ]
     }
   ]
 }
