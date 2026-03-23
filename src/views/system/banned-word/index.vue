@@ -14,6 +14,14 @@
             />
             <ElButton type="primary" @click="handleSearch" v-ripple>搜索</ElButton>
             <ElButton @click="showDialog('add')" v-ripple>新增违禁词</ElButton>
+            <ElButton
+              type="danger"
+              :disabled="selectedIds.length === 0"
+              @click="handleBatchDelete"
+              v-ripple
+            >
+              批量删除
+            </ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -23,6 +31,7 @@
         :data="data"
         :columns="columns"
         :pagination="pagination"
+        @selection-change="handleSelectionChange"
         @pagination:size-change="handleSizeChange"
         @pagination:current-change="handleCurrentChange"
       />
@@ -61,7 +70,8 @@
     fetchGetBannedWordList,
     fetchCreateBannedWord,
     fetchUpdateBannedWord,
-    fetchDeleteBannedWord
+    fetchDeleteBannedWord,
+    fetchBatchDeleteBannedWords
   } from '@/api/system-manage'
   import { ElTag, ElMessageBox } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
@@ -69,6 +79,7 @@
   defineOptions({ name: 'BannedWordManage' })
 
   const searchWord = ref('')
+  const selectedIds = ref<number[]>([])
   const dialogVisible = ref(false)
   const dialogType = ref<'add' | 'edit'>('add')
   const currentEditId = ref<number>(0)
@@ -110,6 +121,7 @@
       apiFn: fetchGetBannedWordList,
       apiParams: { page: 1, limit: 20 },
       columnsFactory: () => [
+        { type: 'selection' },
         { type: 'index', width: 60, label: '序号' },
         { prop: 'word', label: '违禁词', minWidth: 150 },
         {
@@ -151,6 +163,10 @@
     getData()
   }
 
+  const handleSelectionChange = (selection: Api.Admin.BannedWord[]) => {
+    selectedIds.value = selection.map((item) => item.id)
+  }
+
   const showDialog = (type: 'add' | 'edit', row?: Api.Admin.BannedWord) => {
     dialogType.value = type
     currentEditId.value = row?.id || 0
@@ -190,6 +206,22 @@
     }).then(async () => {
       await fetchDeleteBannedWord(id)
       refreshRemove()
+    })
+  }
+
+  const handleBatchDelete = () => {
+    ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedIds.value.length} 个违禁词吗？`,
+      '批量删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(async () => {
+      await fetchBatchDeleteBannedWords(selectedIds.value)
+      refreshRemove()
+      selectedIds.value = []
     })
   }
 </script>

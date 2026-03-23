@@ -44,13 +44,33 @@
         <ElDescriptionsItem label="用户ID">{{ detailData.user_id }}</ElDescriptionsItem>
         <ElDescriptionsItem label="父评论ID">{{ detailData.parent_id ?? '-' }}</ElDescriptionsItem>
         <ElDescriptionsItem label="审核状态">
-          <ElTag :type="(AUDIT_STATUS_CONFIG[detailData.audit_status] || UNKNOWN_AUDIT_STATUS).type" size="small">
+          <ElTag
+            :type="(AUDIT_STATUS_CONFIG[detailData.audit_status] || UNKNOWN_AUDIT_STATUS).type"
+            size="small"
+          >
             {{ (AUDIT_STATUS_CONFIG[detailData.audit_status] || UNKNOWN_AUDIT_STATUS).text }}
           </ElTag>
         </ElDescriptionsItem>
         <ElDescriptionsItem label="创建时间">{{ detailData.created_at }}</ElDescriptionsItem>
       </ElDescriptions>
     </ElDrawer>
+
+    <ElDialog v-model="editDialogVisible" title="编辑评论" width="500px" align-center>
+      <ElForm ref="editFormRef" :model="editFormData" :rules="editFormRules" label-width="80px">
+        <ElFormItem label="评论内容" prop="content">
+          <ElInput
+            v-model="editFormData.content"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入评论内容"
+          />
+        </ElFormItem>
+      </ElForm>
+      <template #footer>
+        <ElButton @click="editDialogVisible = false">取消</ElButton>
+        <ElButton type="primary" @click="handleEditSubmit">确定</ElButton>
+      </template>
+    </ElDialog>
   </div>
 </template>
 
@@ -61,9 +81,11 @@
     fetchGetCommentList,
     fetchDeleteComment,
     fetchBatchDeleteComments,
-    fetchGetComment
+    fetchGetComment,
+    fetchUpdateComment
   } from '@/api/system-manage'
   import { ElTag, ElMessageBox, ElDrawer, ElDescriptions, ElDescriptionsItem } from 'element-plus'
+  import type { FormInstance, FormRules } from 'element-plus'
 
   defineOptions({ name: 'CommentManage' })
 
@@ -71,6 +93,13 @@
   const selectedIds = ref<number[]>([])
   const detailVisible = ref(false)
   const detailData = ref<Api.Admin.Comment | null>(null)
+  const editDialogVisible = ref(false)
+  const currentEditId = ref<number>(0)
+  const editFormRef = ref<FormInstance>()
+  const editFormData = reactive({ content: '' })
+  const editFormRules: FormRules = {
+    content: [{ required: true, message: '请输入评论内容', trigger: 'blur' }]
+  }
 
   const AUDIT_STATUS_CONFIG: Record<
     string,
@@ -93,6 +122,7 @@
     handleSizeChange,
     handleCurrentChange,
     refreshData,
+    refreshUpdate,
     refreshRemove
   } = useTable({
     core: {
@@ -123,11 +153,12 @@
         {
           prop: 'operation',
           label: '操作',
-          width: 120,
+          width: 160,
           fixed: 'right',
           formatter: (row: Api.Admin.Comment) =>
             h('div', [
               h(ArtButtonTable, { type: 'view', onClick: () => handleView(row.id) }),
+              h(ArtButtonTable, { type: 'edit', onClick: () => showEditDialog(row) }),
               h(ArtButtonTable, { type: 'delete', onClick: () => handleDelete(row.id) })
             ])
         }
@@ -144,6 +175,25 @@
     const res = await fetchGetComment(id)
     detailData.value = res
     detailVisible.value = true
+  }
+
+  const showEditDialog = (row: Api.Admin.Comment) => {
+    currentEditId.value = row.id
+    editFormData.content = row.content
+    nextTick(() => {
+      editFormRef.value?.clearValidate()
+      editDialogVisible.value = true
+    })
+  }
+
+  const handleEditSubmit = async () => {
+    if (!editFormRef.value) return
+    await editFormRef.value.validate(async (valid) => {
+      if (!valid) return
+      await fetchUpdateComment(currentEditId.value, { content: editFormData.content })
+      editDialogVisible.value = false
+      refreshUpdate()
+    })
   }
 
   const handleSelectionChange = (selection: Api.Admin.Comment[]) => {

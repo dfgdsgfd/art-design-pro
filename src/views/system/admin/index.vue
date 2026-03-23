@@ -4,8 +4,22 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
+            <ElInput
+              v-model="searchUsername"
+              placeholder="搜索用户名"
+              clearable
+              style="width: 200px"
+              @clear="handleSearch"
+              @keyup.enter="handleSearch"
+            />
+            <ElButton type="primary" @click="handleSearch" v-ripple>搜索</ElButton>
             <ElButton @click="showCreateDialog" v-ripple>新增管理员</ElButton>
-            <ElButton type="danger" :disabled="selectedIds.length === 0" @click="handleBatchDelete" v-ripple>
+            <ElButton
+              type="danger"
+              :disabled="selectedIds.length === 0"
+              @click="handleBatchDelete"
+              v-ripple
+            >
               批量删除
             </ElButton>
           </ElSpace>
@@ -23,12 +37,22 @@
       />
 
       <ElDialog v-model="createDialogVisible" title="新增管理员" width="400px" align-center>
-        <ElForm ref="createFormRef" :model="createFormData" :rules="createFormRules" label-width="80px">
+        <ElForm
+          ref="createFormRef"
+          :model="createFormData"
+          :rules="createFormRules"
+          label-width="80px"
+        >
           <ElFormItem label="用户名" prop="username">
             <ElInput v-model="createFormData.username" placeholder="请输入用户名" />
           </ElFormItem>
           <ElFormItem label="密码" prop="password">
-            <ElInput v-model="createFormData.password" type="password" show-password placeholder="请输入密码" />
+            <ElInput
+              v-model="createFormData.password"
+              type="password"
+              show-password
+              placeholder="请输入密码"
+            />
           </ElFormItem>
         </ElForm>
         <template #footer>
@@ -38,9 +62,19 @@
       </ElDialog>
 
       <ElDialog v-model="passwordDialogVisible" title="重置密码" width="400px" align-center>
-        <ElForm ref="passwordFormRef" :model="passwordFormData" :rules="passwordFormRules" label-width="80px">
+        <ElForm
+          ref="passwordFormRef"
+          :model="passwordFormData"
+          :rules="passwordFormRules"
+          label-width="80px"
+        >
           <ElFormItem label="新密码" prop="password">
-            <ElInput v-model="passwordFormData.password" type="password" show-password placeholder="请输入新密码" />
+            <ElInput
+              v-model="passwordFormData.password"
+              type="password"
+              show-password
+              placeholder="请输入新密码"
+            />
           </ElFormItem>
         </ElForm>
         <template #footer>
@@ -67,6 +101,7 @@
 
   defineOptions({ name: 'AdminManage' })
 
+  const searchUsername = ref('')
   const selectedIds = ref<number[]>([])
 
   const createDialogVisible = ref(false)
@@ -97,6 +132,8 @@
     data,
     loading,
     pagination,
+    getData,
+    replaceSearchParams,
     handleSizeChange,
     handleCurrentChange,
     refreshData,
@@ -127,6 +164,11 @@
     }
   })
 
+  const handleSearch = () => {
+    replaceSearchParams({ username: searchUsername.value || undefined })
+    getData()
+  }
+
   const handleSelectionChange = (selection: Api.Admin.AdminUser[]) => {
     selectedIds.value = selection.map((item) => item.id)
   }
@@ -144,7 +186,10 @@
     if (!createFormRef.value) return
     await createFormRef.value.validate(async (valid) => {
       if (!valid) return
-      await fetchCreateAdmin({ username: createFormData.username, password: createFormData.password })
+      await fetchCreateAdmin({
+        username: createFormData.username,
+        password: createFormData.password
+      })
       createDialogVisible.value = false
       refreshCreate()
     })
@@ -181,11 +226,15 @@
   }
 
   const handleBatchDelete = () => {
-    ElMessageBox.confirm(`确定要删除选中的 ${selectedIds.value.length} 个管理员吗？`, '批量删除确认', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }).then(async () => {
+    ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedIds.value.length} 个管理员吗？`,
+      '批量删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(async () => {
       await fetchBatchDeleteAdmins(selectedIds.value)
       refreshRemove()
       selectedIds.value = []

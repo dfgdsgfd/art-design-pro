@@ -4,8 +4,22 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
+            <ElInput
+              v-model="searchName"
+              placeholder="搜索分类名"
+              clearable
+              style="width: 200px"
+              @clear="handleSearch"
+              @keyup.enter="handleSearch"
+            />
+            <ElButton type="primary" @click="handleSearch" v-ripple>搜索</ElButton>
             <ElButton @click="showDialog('add')" v-ripple>新增分类</ElButton>
-            <ElButton type="danger" :disabled="selectedIds.length === 0" @click="handleBatchDelete" v-ripple>
+            <ElButton
+              type="danger"
+              :disabled="selectedIds.length === 0"
+              @click="handleBatchDelete"
+              v-ripple
+            >
               批量删除
             </ElButton>
           </ElSpace>
@@ -60,6 +74,7 @@
 
   defineOptions({ name: 'CategoryManage' })
 
+  const searchName = ref('')
   const selectedIds = ref<number[]>([])
   const dialogVisible = ref(false)
   const dialogType = ref<'add' | 'edit'>('add')
@@ -82,6 +97,8 @@
     data,
     loading,
     pagination,
+    getData,
+    replaceSearchParams,
     handleSizeChange,
     handleCurrentChange,
     refreshData,
@@ -112,6 +129,11 @@
       ]
     }
   })
+
+  const handleSearch = () => {
+    replaceSearchParams({ name: searchName.value || undefined })
+    getData()
+  }
 
   const handleSelectionChange = (selection: Api.Admin.Category[]) => {
     selectedIds.value = selection.map((item) => item.id)
@@ -160,11 +182,15 @@
   }
 
   const handleBatchDelete = () => {
-    ElMessageBox.confirm(`确定要删除选中的 ${selectedIds.value.length} 个分类吗？`, '批量删除确认', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }).then(async () => {
+    ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedIds.value.length} 个分类吗？`,
+      '批量删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(async () => {
       await fetchBatchDeleteCategories(selectedIds.value)
       refreshRemove()
       selectedIds.value = []
