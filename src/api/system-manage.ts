@@ -236,10 +236,7 @@ export function fetchCreateCategory(data: { name: string; category_title: string
 }
 
 /** 更新分类 */
-export function fetchUpdateCategory(
-  id: number,
-  data: { name?: string; category_title?: string }
-) {
+export function fetchUpdateCategory(id: number, data: { name?: string; category_title?: string }) {
   return request.put<Api.Admin.Category>({
     url: `/api/admin/categories/${id}`,
     data,
@@ -537,7 +534,11 @@ export function fetchGetBannedWordList(params?: Api.Admin.BannedWordSearchParams
 }
 
 /** 创建违禁词 */
-export function fetchCreateBannedWord(data: { word: string; category_id?: number; severity?: string }) {
+export function fetchCreateBannedWord(data: {
+  word: string
+  category_id?: number
+  severity?: string
+}) {
   return request.post<Api.Admin.BannedWord>({
     url: '/api/admin/banned-words',
     data,
@@ -546,7 +547,10 @@ export function fetchCreateBannedWord(data: { word: string; category_id?: number
 }
 
 /** 更新违禁词 */
-export function fetchUpdateBannedWord(id: number, data: { word?: string; category_id?: number; severity?: string; is_active?: boolean }) {
+export function fetchUpdateBannedWord(
+  id: number,
+  data: { word?: string; category_id?: number; severity?: string; is_active?: boolean }
+) {
   return request.put<Api.Admin.BannedWord>({
     url: `/api/admin/banned-words/${id}`,
     data,
@@ -666,7 +670,9 @@ export function fetchRetryQueueJob(name: string, jobId: string) {
 // ==================== 通知模板管理 ====================
 
 /** 获取通知模板列表 */
-export function fetchGetNotificationTemplateList(params?: Api.Admin.NotificationTemplateSearchParams) {
+export function fetchGetNotificationTemplateList(
+  params?: Api.Admin.NotificationTemplateSearchParams
+) {
   return request.get<Api.Common.PaginatedResponse<Api.Admin.NotificationTemplate>>({
     url: '/api/admin/notification-templates',
     params
@@ -690,7 +696,10 @@ export function fetchCreateNotificationTemplate(data: Api.Admin.NotificationTemp
 }
 
 /** 更新通知模板 */
-export function fetchUpdateNotificationTemplate(id: number, data: Api.Admin.NotificationTemplateFormParams) {
+export function fetchUpdateNotificationTemplate(
+  id: number,
+  data: Api.Admin.NotificationTemplateFormParams
+) {
   return request.put<Api.Admin.NotificationTemplate>({
     url: `/api/admin/notification-templates/${id}`,
     data,
@@ -1137,7 +1146,10 @@ export function fetchGetSystemNotification(id: number) {
 }
 
 /** 更新系统通知 */
-export function fetchUpdateSystemNotification(id: number, data: Api.Admin.SystemNotificationFormParams) {
+export function fetchUpdateSystemNotification(
+  id: number,
+  data: Api.Admin.SystemNotificationFormParams
+) {
   return request.put({
     url: `/api/admin/system-notifications/${id}`,
     data,
@@ -1256,7 +1268,7 @@ export function fetchGetTestUsers() {
   })
 }
 
-// ==================== 菜单管理（保留兼容） ====================
+// ==================== 菜单管理 ====================
 
 /** 获取菜单列表 */
 export function fetchGetMenuList() {
@@ -1265,12 +1277,72 @@ export function fetchGetMenuList() {
   })
 }
 
-// ==================== 兼容旧接口 ====================
+/** 创建菜单 */
+export function fetchCreateMenu(data: Record<string, any>) {
+  return request.post({
+    url: '/api/v3/system/menus',
+    data,
+    showSuccessMessage: true
+  })
+}
 
-/** 获取角色列表（保留兼容） */
+/** 更新菜单 */
+export function fetchUpdateMenu(path: string, data: Record<string, any>) {
+  return request.put({
+    url: `/api/v3/system/menus/${encodeURIComponent(path)}`,
+    data,
+    showSuccessMessage: true
+  })
+}
+
+/** 删除菜单 */
+export function fetchDeleteMenu(path: string) {
+  return request.del({
+    url: `/api/v3/system/menus/${encodeURIComponent(path)}`,
+    showSuccessMessage: true
+  })
+}
+
+// ==================== 角色管理 ====================
+
+/** 获取角色列表 */
 export function fetchGetRoleList(params?: Api.SystemManage.RoleSearchParams) {
   return request.get<Api.SystemManage.RoleList>({
     url: '/api/role/list',
     params
+  })
+}
+
+/** 创建角色 */
+export function fetchCreateRole(data: {
+  roleName: string
+  roleCode: string
+  description: string
+  enabled: boolean
+}) {
+  return request.post({
+    url: '/api/role',
+    data,
+    showSuccessMessage: true
+  })
+}
+
+/** 更新角色 */
+export function fetchUpdateRole(
+  roleId: number,
+  data: { roleName: string; roleCode: string; description: string; enabled: boolean }
+) {
+  return request.put({
+    url: `/api/role/${roleId}`,
+    data,
+    showSuccessMessage: true
+  })
+}
+
+/** 删除角色 */
+export function fetchDeleteRole(roleId: number) {
+  return request.del({
+    url: `/api/role/${roleId}`,
+    showSuccessMessage: true
   })
 }

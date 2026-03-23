@@ -55,7 +55,12 @@
   import { useTableColumns } from '@/hooks/core/useTableColumns'
   import type { AppRouteRecord } from '@/types/router'
   import MenuDialog from './modules/menu-dialog.vue'
-  import { fetchGetMenuList } from '@/api/system-manage'
+  import {
+    fetchGetMenuList,
+    fetchCreateMenu,
+    fetchUpdateMenu,
+    fetchDeleteMenu
+  } from '@/api/system-manage'
   import { ElTag, ElMessageBox } from 'element-plus'
 
   defineOptions({ name: 'Menus' })
@@ -205,7 +210,7 @@
             }),
             h(ArtButtonTable, {
               type: 'delete',
-              onClick: () => handleDeleteAuth()
+              onClick: () => handleDeleteAuth(row)
             })
           ])
         }
@@ -222,7 +227,7 @@
           }),
           h(ArtButtonTable, {
             type: 'delete',
-            onClick: () => handleDeleteMenu()
+            onClick: () => handleDeleteMenu(row)
           })
         ])
       }
@@ -413,23 +418,30 @@
    * 提交表单数据
    * @param formData 表单数据
    */
-  const handleSubmit = (formData: MenuFormData): void => {
-    console.log('提交数据:', formData)
-    // TODO: 调用API保存数据
-    getMenuList()
+  const handleSubmit = async (formData: MenuFormData): Promise<void> => {
+    try {
+      if (editData.value) {
+        await fetchUpdateMenu(editData.value.path, formData)
+      } else {
+        await fetchCreateMenu(formData)
+      }
+      getMenuList()
+    } catch {
+      // error handled by request interceptor
+    }
   }
 
   /**
    * 删除菜单
    */
-  const handleDeleteMenu = async (): Promise<void> => {
+  const handleDeleteMenu = async (row: AppRouteRecord): Promise<void> => {
     try {
       await ElMessageBox.confirm('确定要删除该菜单吗？删除后无法恢复', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       })
-      ElMessage.success('删除成功')
+      await fetchDeleteMenu(row.path)
       getMenuList()
     } catch (error) {
       if (error !== 'cancel') {
@@ -441,14 +453,14 @@
   /**
    * 删除权限按钮
    */
-  const handleDeleteAuth = async (): Promise<void> => {
+  const handleDeleteAuth = async (row: AppRouteRecord): Promise<void> => {
     try {
       await ElMessageBox.confirm('确定要删除该权限吗？删除后无法恢复', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       })
-      ElMessage.success('删除成功')
+      await fetchDeleteMenu(row.path)
       getMenuList()
     } catch (error) {
       if (error !== 'cancel') {
