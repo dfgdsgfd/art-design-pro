@@ -288,19 +288,14 @@
       }
     },
     "system": {
-      "title": "System Settings",
-      "user": "User Manage",
-      "role": "Role Manage",
-      "userCenter": "User Center",
-      "menu": "Menu Manage",
-      "nested": "Nested Menu",
-      "menu1": "Menu 1",
-      "menu2": "Menu 2",
-      "menu21": "Menu 2-1",
-      "menu3": "Menu 3",
-      "menu31": "Menu 3-1",
-      "menu32": "Menu 3-2",
-      "menu321": "Menu 3-2-1"
+      "title": "Admin Panel",
+      "user": "User Management",
+      "post": "Post Management",
+      "comment": "Comment Management",
+      "tag": "Tag Management",
+      "category": "Category Management",
+      "admin": "Admin Management",
+      "userCenter": "User Center"
     },
     "safeguard": {
       "title": "Safeguard",

@@ -370,7 +370,18 @@ async function handleDynamicRoutes(
 async function fetchUserInfo(): Promise<void> {
   const userStore = useUserStore()
   const data = await fetchGetUserInfo()
-  userStore.setUserInfo(data)
+  // Adapt admin/me response to UserInfo format
+  const userInfo: Api.Auth.UserInfo = {
+    id: data.id,
+    username: data.username,
+    buttons: data.buttons || [],
+    roles: data.roles || ['R_SUPER'],
+    userId: data.id || data.userId,
+    userName: data.username || data.userName,
+    email: data.email || '',
+    avatar: data.avatar
+  }
+  userStore.setUserInfo(userInfo)
   // 检查并清理工作台标签页（如果是不同用户登录）
   userStore.checkAndClearWorktabs()
 }
