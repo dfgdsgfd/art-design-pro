@@ -306,6 +306,13 @@
       "notification": "System Notification",
       "contentReview": "Content Review",
       "queue": "Queue Monitor",
+      "systemSettings": "System Settings",
+      "notificationTemplate": "Notification Template",
+      "openApi": "Open API",
+      "monitor": "Activity Monitor",
+      "userToolbar": "User Toolbar",
+      "recommendation": "Recommendation Config",
+      "batchUpload": "Batch Upload",
       "userCenter": "User Center"
     },
     "safeguard": {

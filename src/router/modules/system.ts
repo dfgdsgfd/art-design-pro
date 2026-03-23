@@ -182,6 +182,76 @@ export const systemRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'system-settings',
+      name: 'AdminSystemSettings',
+      component: '/system/system-settings',
+      meta: {
+        title: 'menus.system.systemSettings',
+        icon: 'ri:settings-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'notification-template',
+      name: 'AdminNotificationTemplate',
+      component: '/system/notification-template',
+      meta: {
+        title: 'menus.system.notificationTemplate',
+        icon: 'ri:mail-settings-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'open-api',
+      name: 'AdminOpenApi',
+      component: '/system/open-api',
+      meta: {
+        title: 'menus.system.openApi',
+        icon: 'ri:key-fill',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'monitor',
+      name: 'AdminMonitor',
+      component: '/system/monitor',
+      meta: {
+        title: 'menus.system.monitor',
+        icon: 'ri:pulse-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'user-toolbar',
+      name: 'AdminUserToolbar',
+      component: '/system/user-toolbar',
+      meta: {
+        title: 'menus.system.userToolbar',
+        icon: 'ri:tools-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'recommendation',
+      name: 'AdminRecommendation',
+      component: '/system/recommendation',
+      meta: {
+        title: 'menus.system.recommendation',
+        icon: 'ri:thumb-up-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'batch-upload',
+      name: 'AdminBatchUpload',
+      component: '/system/batch-upload',
+      meta: {
+        title: 'menus.system.batchUpload',
+        icon: 'ri:upload-cloud-line',
+        keepAlive: true
+      }
+    },
+    {
       path: 'user-center',
       name: 'UserCenter',
       component: '/system/user-center',

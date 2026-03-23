@@ -306,6 +306,13 @@
       "notification": "系统通知",
       "contentReview": "内容审核",
       "queue": "队列监控",
+      "systemSettings": "系统设置",
+      "notificationTemplate": "通知模板",
+      "openApi": "开放API",
+      "monitor": "监控动态",
+      "userToolbar": "用户工具栏",
+      "recommendation": "推荐配置",
+      "batchUpload": "批量上传",
       "userCenter": "个人中心"
     },
     "safeguard": {
