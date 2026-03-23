@@ -49,14 +49,23 @@ declare namespace Api {
       password: string
     }
 
-    /** 登录响应 */
-    interface LoginResponse {
+    /** 管理员信息（登录响应中） */
+    interface LoginAdmin {
+      id: number
+      username: string
+    }
+
+    /** 登录令牌 */
+    interface LoginTokens {
       access_token: string
       refresh_token?: string
       expires_in?: number
-      /** 兼容旧格式 */
-      token?: string
-      refreshToken?: string
+    }
+
+    /** 登录响应 */
+    interface LoginResponse {
+      admin: LoginAdmin
+      tokens: LoginTokens
     }
 
     /** 管理员信息 */

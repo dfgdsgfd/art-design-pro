@@ -143,7 +143,7 @@
       key: 'admin',
       label: t('login.roles.admin'),
       userName: 'admin',
-      password: 'admin123',
+      password: '123456',
       roles: ['R_SUPER']
     }
   ])
@@ -210,9 +210,9 @@
         password
       })
 
-      // 验证token（兼容新旧API响应格式）
-      const token = res.access_token || res.token
-      const rToken = res.refresh_token || res.refreshToken
+      // 从API响应中提取token
+      const token = res.tokens?.access_token
+      const rToken = res.tokens?.refresh_token
       if (!token) {
         throw new Error('Login failed - no token received')
       }
